@@ -47,7 +47,6 @@ export default class MermaidElkRendererPlugin extends Plugin {
 			: null;
 		(mermaid as any)[ORIG_API_RENDER_KEY] = originalApiRender;
 
-		const plugin = this;
 		const route = async (original: Function, id: string, source: string, ...rest: any[]) => {
 			const src = typeof source === "string" ? source : String(source ?? "");
 

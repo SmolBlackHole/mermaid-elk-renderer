@@ -1,5 +1,6 @@
 node_modules/
 *.log
+main.js
 
 # Build and editor artifacts
 dist/
