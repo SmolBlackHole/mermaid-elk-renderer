@@ -56,9 +56,9 @@ Build output files used by Obsidian:
 
 Follow:
 
-- https://docs.obsidian.md/Plugins/Releasing/Submit+your+plugin
-- https://docs.obsidian.md/Plugins/Releasing/Submission+requirements+for+plugins
-- https://docs.obsidian.md/Developer+policies
+- <https://docs.obsidian.md/Plugins/Releasing/Submit+your+plugin>
+- <https://docs.obsidian.md/Plugins/Releasing/Submission+requirements+for+plugins>
+- <https://docs.obsidian.md/Developer+policies>
 
 Before submission, ensure:
 
