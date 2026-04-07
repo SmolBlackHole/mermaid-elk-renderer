@@ -12,14 +12,15 @@ type RenderFn = (id: string, source: string, ...rest: unknown[]) => Promise<unkn
 interface MermaidLike extends Record<string, unknown> {
 	render: RenderFn;
 	mermaidAPI?: MermaidLike;
+	registerLayoutLoaders: (layouts: unknown) => void;
 }
 
 export default class MermaidElkRendererPlugin extends Plugin {
 	async onload() {
-		const globalMermaid = await loadMermaid();
+		const globalMermaid = await loadMermaid() as unknown as MermaidLike;
 		globalMermaid.registerLayoutLoaders(elkLayouts);
 
-		this.patchMarkerRouting(globalMermaid as unknown as MermaidLike);
+		this.patchMarkerRouting(globalMermaid);
 	}
 
 	onunload() {

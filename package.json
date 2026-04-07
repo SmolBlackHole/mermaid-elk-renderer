@@ -5,7 +5,9 @@
   "main": "main.js",
   "scripts": {
     "dev": "node esbuild.config.mjs",
-    "build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production"
+    "build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
+    "lint": "eslint main.ts",
+    "lint:fix": "eslint main.ts --fix"
   },
   "keywords": [],
   "author": "SmolBlackHole",
@@ -16,8 +18,12 @@
   },
   "devDependencies": {
     "@types/node": "^16.18.126",
+    "@typescript-eslint/eslint-plugin": "^8.58.0",
+    "@typescript-eslint/parser": "^8.58.0",
     "builtin-modules": "^3.3.0",
     "esbuild": "^0.17.3",
+    "eslint": "^9.39.4",
+    "eslint-plugin-obsidianmd": "^0.1.9",
     "obsidian": "^1.12.3",
     "tslib": "^2.4.0",
     "typescript": "^6.0.2"
