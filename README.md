@@ -2,67 +2,75 @@
 
 Re-enables the ELK (Eclipse Layout Kernel) renderer for Mermaid diagrams in Obsidian.
 
-## What it does
+## Features
 
-- Registers ELK layouts through `@mermaid-js/layout-elk`.
-- Keeps default Mermaid behavior for regular diagrams.
-- Enables ELK per diagram with the marker `%% elk %%` at the top of a `mermaid` code block.
+- Registers ELK layouts via `@mermaid-js/layout-elk`.
+- Keeps default Mermaid behavior for all other diagrams unchanged.
+- Enables ELK only where `%% elk %%` is set, on a per-diagram basis.
+- Preserves custom `classDef` styling.
+- Respects Obsidian's light and dark mode color scheme.
 
-Example:
+## Screenshots
 
+![Example 1](assets/example_1.png)
+
+![Example 2](assets/example_2.png)
+
+## Installation
+
+### Via Community Plugins
+
+1. Open Obsidian Settings and go to **Community Plugins**.
+2. Search for **Mermaid ELK Renderer** and install it.
+3. Enable the plugin.
+4. Restart Obsidian so the ELK renderer patch is fully applied.
+5. After restarting, verify the plugin is still shown as enabled under Community Plugins.
+
+> [!warning]
+> A restart is required after enabling the plugin. Without it, the ELK renderer patch is not applied and `%% elk %%` diagrams will not render correctly.
+
+### Manual Installation
+
+> [!info]
+> Use this method if the plugin is not yet listed in the Community Plugins directory.
+
+1. Download the latest release: `main.js`, `manifest.json`, and `styles.css`.
+2. Open Obsidian Settings and go to **Community Plugins**.
+3. At the bottom of the installed plugins list, click the folder icon on the right. This opens the plugins folder in your file explorer.
+4. Create a new folder named `mermaid-elk-renderer` inside that folder.
+5. Copy `main.js`, `manifest.json`, and `styles.css` into it.
+6. Restart Obsidian, then enable **Mermaid ELK Renderer** under Community Plugins.
+7. Restart Obsidian once more and verify the plugin is still shown as enabled.
+
+## Usage
+
+Add `%% elk %%` at the top of any `mermaid` code block to use the ELK renderer for that diagram.
+
+````markdown
 ```mermaid
 %% elk %%
-flowchart TD
+flowchart LR
     A[Start] --> B[Analyze]
     B --> C[Done]
 ```
+````
 
-## Development
+Custom `classDef` styling works as expected:
 
-Prerequisites:
+````markdown
+```mermaid
+%% elk %%
+flowchart LR
+    A[Start] --> B[Process]
 
-- Node.js 18+
-
-Install and build:
-
-```bash
-npm install
-npm run build
+    classDef highlight fill:#e8f5e9,stroke:#4caf50;
+    class A highlight;
 ```
+````
 
-Build output files used by Obsidian:
+> [!tip]
+> All diagrams without `%% elk %%` continue to use the default Mermaid renderer. You can mix ELK and non-ELK diagrams freely in the same vault.
 
-- `main.js`
-- `manifest.json`
-- `styles.css` (optional, currently included)
+## License
 
-## Install for local testing
-
-1. Copy this plugin folder into your vault under `.obsidian/plugins/mermaid-elk-renderer`.
-2. In Obsidian, enable Community plugins and then enable Mermaid ELK Renderer.
-
-## Release process
-
-1. Bump `version` in `manifest.json` and `package.json` using semantic versioning (`x.y.z`).
-2. Update `versions.json` with `"<version>": "<minAppVersion>"`.
-3. Run `npm run build`.
-4. Create a GitHub Release with a tag matching `manifest.json` version.
-5. Upload release assets:
-   - `main.js`
-   - `manifest.json`
-   - `styles.css` (if used)
-
-## Submission to Obsidian Community Plugins
-
-Follow:
-
-- <https://docs.obsidian.md/Plugins/Releasing/Submit+your+plugin>
-- <https://docs.obsidian.md/Plugins/Releasing/Submission+requirements+for+plugins>
-- <https://docs.obsidian.md/Developer+policies>
-
-Before submission, ensure:
-
-- `description` is short, clear, <= 250 chars, and ends with a period.
-- `minAppVersion` matches real compatibility.
-- `fundingUrl` is only present if it points to donation/sponsorship services.
-- `isDesktopOnly` is set correctly based on APIs used.
+[MIT](LICENSE)
