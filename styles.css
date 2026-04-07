@@ -1,0 +1,15 @@
+.mermaid-elk-wrapper {
+	overflow-x: auto;
+	padding: 0;
+}
+
+.mermaid-elk-wrapper svg[id^="mermaid-elk-"] {
+	display: block;
+	max-width: none !important;
+}
+
+.mermaid-elk-error {
+	color: var(--text-error);
+	font-size: 0.9em;
+	white-space: pre-wrap;
+}

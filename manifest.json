@@ -1,0 +1,9 @@
+{
+  "id": "mermaid-elk-renderer",
+  "name": "Mermaid ELK Renderer",
+  "version": "1.0.0",
+  "minAppVersion": "1.10.3",
+  "description": "Re-enables the ELK (Eclipse Layout Kernel) renderer for Mermaid diagrams.",
+  "author": "Andre",
+  "isDesktopOnly": false
+}

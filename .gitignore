@@ -1,0 +1,10 @@
+node_modules/
+*.log
+
+# Build and editor artifacts
+dist/
+.DS_Store
+Thumbs.db
+
+# Local Obsidian vault artifacts if tested in-place
+.obsidian/
