@@ -7,47 +7,54 @@ const PATCH_FLAG = "__mermaidElkMarkerPatched";
 const ORIG_RENDER_KEY = "__mermaidElkOriginalRender";
 const ORIG_API_RENDER_KEY = "__mermaidElkOriginalApiRender";
 
+type RenderFn = (id: string, source: string, ...rest: unknown[]) => Promise<unknown>;
+
+interface MermaidLike extends Record<string, unknown> {
+	render: RenderFn;
+	mermaidAPI?: MermaidLike;
+}
+
 export default class MermaidElkRendererPlugin extends Plugin {
 	async onload() {
 		const globalMermaid = await loadMermaid();
 		globalMermaid.registerLayoutLoaders(elkLayouts);
 
-		this.patchMarkerRouting(globalMermaid);
+		this.patchMarkerRouting(globalMermaid as unknown as MermaidLike);
 	}
 
 	onunload() {
-		const mermaid = (window as any).mermaid;
+		const win = window as Window & { mermaid?: MermaidLike };
+		const mermaid = win.mermaid;
 		if (!mermaid) return;
 
-		const originalRender = (mermaid as any)[ORIG_RENDER_KEY];
+		const originalRender = mermaid[ORIG_RENDER_KEY];
 		if (typeof originalRender === "function") {
-			mermaid.render = originalRender;
-			delete (mermaid as any)[ORIG_RENDER_KEY];
+			mermaid.render = originalRender as RenderFn;
+			delete mermaid[ORIG_RENDER_KEY];
 		}
 
 		if (mermaid.mermaidAPI) {
-			const originalApiRender = (mermaid as any)[ORIG_API_RENDER_KEY];
+			const originalApiRender = mermaid.mermaidAPI[ORIG_API_RENDER_KEY];
 			if (typeof originalApiRender === "function") {
-				mermaid.mermaidAPI.render = originalApiRender;
-				delete (mermaid as any)[ORIG_API_RENDER_KEY];
+				mermaid.mermaidAPI.render = originalApiRender as RenderFn;
+				delete mermaid.mermaidAPI[ORIG_API_RENDER_KEY];
 			}
 		}
 	}
 
-	private patchMarkerRouting(mermaid: any) {
-		if (!mermaid || typeof mermaid.render !== "function") return;
-
-		if (mermaid.render && mermaid.render[PATCH_FLAG]) return;
+	private patchMarkerRouting(mermaid: MermaidLike) {
+		if (typeof mermaid.render !== "function") return;
+		if (PATCH_FLAG in mermaid.render) return;
 
 		const originalRender = mermaid.render.bind(mermaid);
-		(mermaid as any)[ORIG_RENDER_KEY] = originalRender;
+		mermaid[ORIG_RENDER_KEY] = originalRender;
 
 		const originalApiRender = mermaid.mermaidAPI && typeof mermaid.mermaidAPI.render === "function"
 			? mermaid.mermaidAPI.render.bind(mermaid.mermaidAPI)
 			: null;
-		(mermaid as any)[ORIG_API_RENDER_KEY] = originalApiRender;
+		mermaid[ORIG_API_RENDER_KEY] = originalApiRender;
 
-		const route = async (original: Function, id: string, source: string, ...rest: any[]) => {
+		const route = (original: RenderFn, id: string, source: string, ...rest: unknown[]): Promise<unknown> => {
 			const src = typeof source === "string" ? source : String(source ?? "");
 
 			if (!ELK_MARKER_RE.test(src)) {
@@ -59,18 +66,18 @@ export default class MermaidElkRendererPlugin extends Plugin {
 			return original(id, transformed, ...rest);
 		};
 
-		const patchedRender = async function (id: string, source: string, ...rest: any[]) {
-			return route((mermaid as any)[ORIG_RENDER_KEY], id, source, ...rest);
-		};
-		(patchedRender as any)[PATCH_FLAG] = true;
+		const patchedRender = (id: string, source: string, ...rest: unknown[]): Promise<unknown> =>
+			route(mermaid[ORIG_RENDER_KEY] as RenderFn, id, source, ...rest);
+		Object.defineProperty(patchedRender, PATCH_FLAG, { value: true, configurable: true });
 		mermaid.render = patchedRender;
 
 		if (mermaid.mermaidAPI && originalApiRender) {
-			const patchedApiRender = async function (id: string, source: string, ...rest: any[]) {
-				return route((mermaid as any)[ORIG_API_RENDER_KEY], id, source, ...rest);
-			};
-			(patchedApiRender as any)[PATCH_FLAG] = true;
-			mermaid.mermaidAPI.render = patchedApiRender;
+			const api = mermaid.mermaidAPI;
+			const patchedApiRender = (id: string, source: string, ...rest: unknown[]): Promise<unknown> =>
+				route(api[ORIG_API_RENDER_KEY] as RenderFn, id, source, ...rest);
+			Object.defineProperty(patchedApiRender, PATCH_FLAG, { value: true, configurable: true });
+			api.render = patchedApiRender;
 		}
 	}
 }
+
