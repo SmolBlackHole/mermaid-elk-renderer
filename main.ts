@@ -4,8 +4,6 @@ import elkLayouts from "@mermaid-js/layout-elk";
 const ELK_MARKER_RE = /^\s*%%\s*elk\s*%%\s*\n?/i;
 const ELK_FRONTMATTER = "---\nconfig:\n  layout: \"elk\"\n---\n";
 const PATCH_FLAG = "__mermaidElkMarkerPatched";
-const ORIG_RENDER_KEY = "__mermaidElkOriginalRender";
-const ORIG_API_RENDER_KEY = "__mermaidElkOriginalApiRender";
 
 type RenderFn = (id: string, source: string, ...rest: unknown[]) => Promise<unknown>;
 
@@ -16,69 +14,59 @@ interface MermaidLike extends Record<string, unknown> {
 }
 
 export default class MermaidElkRendererPlugin extends Plugin {
-	async onload() {
-		const globalMermaid = await loadMermaid() as unknown as MermaidLike;
-		globalMermaid.registerLayoutLoaders(elkLayouts);
+	private _originalMermaid: MermaidLike | null = null;
 
-		this.patchMarkerRouting(globalMermaid);
+	async onload() {
+		const mermaid = await loadMermaid() as unknown as MermaidLike;
+		if (PATCH_FLAG in mermaid) return;
+
+		mermaid.registerLayoutLoaders(elkLayouts);
+		this.patchMarkerRouting(mermaid);
 	}
 
 	onunload() {
 		const win = window as Window & { mermaid?: MermaidLike };
-		const mermaid = win.mermaid;
-		if (!mermaid) return;
-
-		const originalRender = mermaid[ORIG_RENDER_KEY];
-		if (typeof originalRender === "function") {
-			mermaid.render = originalRender as RenderFn;
-			delete mermaid[ORIG_RENDER_KEY];
-		}
-
-		if (mermaid.mermaidAPI) {
-			const originalApiRender = mermaid.mermaidAPI[ORIG_API_RENDER_KEY];
-			if (typeof originalApiRender === "function") {
-				mermaid.mermaidAPI.render = originalApiRender as RenderFn;
-				delete mermaid.mermaidAPI[ORIG_API_RENDER_KEY];
-			}
+		if (this._originalMermaid) {
+			win.mermaid = this._originalMermaid;
+			this._originalMermaid = null;
 		}
 	}
 
-	private patchMarkerRouting(mermaid: MermaidLike) {
-		if (typeof mermaid.render !== "function") return;
-		if (PATCH_FLAG in mermaid.render) return;
-
-		const originalRender = mermaid.render.bind(mermaid);
-		mermaid[ORIG_RENDER_KEY] = originalRender;
-
-		const originalApiRender = mermaid.mermaidAPI && typeof mermaid.mermaidAPI.render === "function"
-			? mermaid.mermaidAPI.render.bind(mermaid.mermaidAPI)
-			: null;
-		mermaid[ORIG_API_RENDER_KEY] = originalApiRender;
-
-		const route = (original: RenderFn, id: string, source: string, ...rest: unknown[]): Promise<unknown> => {
+	private wrapRender(original: RenderFn, thisArg: MermaidLike): RenderFn {
+		return (id: string, source: string, ...rest: unknown[]): Promise<unknown> => {
 			const src = typeof source === "string" ? source : String(source ?? "");
-
 			if (!ELK_MARKER_RE.test(src)) {
-				return original(id, source, ...rest);
+				return original.call(thisArg, id, source, ...rest);
 			}
-
 			const cleanSource = src.replace(ELK_MARKER_RE, "");
-			const transformed = `${ELK_FRONTMATTER}${cleanSource}`;
-			return original(id, transformed, ...rest);
+			return original.call(thisArg, id, `${ELK_FRONTMATTER}${cleanSource}`, ...rest);
 		};
+	}
 
-		const patchedRender = (id: string, source: string, ...rest: unknown[]): Promise<unknown> =>
-			route(mermaid[ORIG_RENDER_KEY] as RenderFn, id, source, ...rest);
-		Object.defineProperty(patchedRender, PATCH_FLAG, { value: true, configurable: true });
-		mermaid.render = patchedRender;
+	private patchMarkerRouting(mermaid: MermaidLike) {
+		const win = window as Window & { mermaid?: MermaidLike };
+		this._originalMermaid = mermaid;
 
-		if (mermaid.mermaidAPI && originalApiRender) {
+		const patchedRender = this.wrapRender(mermaid.render, mermaid);
+
+		let patchedApi: MermaidLike | undefined;
+		if (mermaid.mermaidAPI && typeof mermaid.mermaidAPI.render === "function") {
 			const api = mermaid.mermaidAPI;
-			const patchedApiRender = (id: string, source: string, ...rest: unknown[]): Promise<unknown> =>
-				route(api[ORIG_API_RENDER_KEY] as RenderFn, id, source, ...rest);
-			Object.defineProperty(patchedApiRender, PATCH_FLAG, { value: true, configurable: true });
-			api.render = patchedApiRender;
+			const patchedApiRender = this.wrapRender(api.render, api);
+			patchedApi = new Proxy(api, {
+				get: (t, prop, receiver) => prop === "render" ? patchedApiRender : Reflect.get(t, prop, receiver) as unknown,
+				has: (t, prop) => prop === PATCH_FLAG || prop in t,
+			});
 		}
+
+		win.mermaid = new Proxy(mermaid, {
+			get: (t, prop, receiver) => {
+				if (prop === "render") return patchedRender;
+				if (prop === "mermaidAPI" && patchedApi) return patchedApi;
+				return Reflect.get(t, prop, receiver) as unknown;
+			},
+			has: (t, prop) => prop === PATCH_FLAG || prop in t,
+		});
 	}
 }
 
