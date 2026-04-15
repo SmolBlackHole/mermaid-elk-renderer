@@ -1,9 +1,9 @@
 {
   "id": "mermaid-elk-renderer",
   "name": "Mermaid ELK Renderer",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "minAppVersion": "1.10.3",
-  "description": "Re-enables the ELK (Eclipse Layout Kernel) renderer for Mermaid diagrams.",
+  "description": "Renders all Mermaid diagrams using beautiful-mermaid with automatic Obsidian theme support. Supports ELK layout via %% elk %% marker.",
   "author": "SmolBlackHole",
   "isDesktopOnly": false
 }

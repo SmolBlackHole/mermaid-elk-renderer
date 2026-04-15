@@ -1,16 +1,16 @@
 import { loadMermaid, Plugin } from "obsidian";
-import elkLayouts from "@mermaid-js/layout-elk";
+import { renderMermaidSVGAsync } from "beautiful-mermaid";
 
+// Strip %% elk %% marker for backward compatibility (ELK is built into beautiful-mermaid)
 const ELK_MARKER_RE = /^\s*%%\s*elk\s*%%\s*\n?/i;
-const ELK_FRONTMATTER = "---\nconfig:\n  layout: \"elk\"\n---\n";
 const PATCH_FLAG = "__mermaidElkMarkerPatched";
 
 type RenderFn = (id: string, source: string, ...rest: unknown[]) => Promise<unknown>;
+type MermaidRenderResult = { svg: string; bindFunctions?: (el: Element) => void };
 
 interface MermaidLike extends Record<string, unknown> {
 	render: RenderFn;
 	mermaidAPI?: MermaidLike;
-	registerLayoutLoaders: (layouts: unknown) => void;
 }
 
 export default class MermaidElkRendererPlugin extends Plugin {
@@ -20,7 +20,6 @@ export default class MermaidElkRendererPlugin extends Plugin {
 		const mermaid = await loadMermaid() as unknown as MermaidLike;
 		if (PATCH_FLAG in mermaid) return;
 
-		mermaid.registerLayoutLoaders(elkLayouts);
 		this.patchMarkerRouting(mermaid);
 	}
 
@@ -32,14 +31,21 @@ export default class MermaidElkRendererPlugin extends Plugin {
 		}
 	}
 
-	private wrapRender(original: RenderFn, thisArg: MermaidLike): RenderFn {
-		return (id: string, source: string, ...rest: unknown[]): Promise<unknown> => {
+	private makeRenderer(fallback: RenderFn, fallbackThis: MermaidLike): RenderFn {
+		return async (id: string, source: string, ...rest: unknown[]): Promise<MermaidRenderResult> => {
 			const src = typeof source === "string" ? source : String(source ?? "");
-			if (!ELK_MARKER_RE.test(src)) {
-				return original.call(thisArg, id, source, ...rest);
-			}
 			const cleanSource = src.replace(ELK_MARKER_RE, "");
-			return original.call(thisArg, id, `${ELK_FRONTMATTER}${cleanSource}`, ...rest);
+
+			const style = getComputedStyle(document.body);
+			const bg = style.getPropertyValue("--background-primary").trim() || "var(--background-primary)";
+			const fg = style.getPropertyValue("--text-normal").trim() || "var(--text-normal)";
+
+			try {
+				const svg = await renderMermaidSVGAsync(cleanSource, { bg, fg });
+				return { svg };
+			} catch {
+				return fallback.call(fallbackThis, id, cleanSource, ...rest) as Promise<MermaidRenderResult>;
+			}
 		};
 	}
 
@@ -47,12 +53,12 @@ export default class MermaidElkRendererPlugin extends Plugin {
 		const win = window as Window & { mermaid?: MermaidLike };
 		this._originalMermaid = mermaid;
 
-		const patchedRender = this.wrapRender(mermaid.render, mermaid);
+		const patchedRender = this.makeRenderer(mermaid.render, mermaid);
 
 		let patchedApi: MermaidLike | undefined;
 		if (mermaid.mermaidAPI && typeof mermaid.mermaidAPI.render === "function") {
 			const api = mermaid.mermaidAPI;
-			const patchedApiRender = this.wrapRender(api.render, api);
+			const patchedApiRender = this.makeRenderer(api.render, api);
 			patchedApi = new Proxy(api, {
 				get: (t, prop, receiver) => prop === "render" ? patchedApiRender : Reflect.get(t, prop, receiver) as unknown,
 				has: (t, prop) => prop === PATCH_FLAG || prop in t,
