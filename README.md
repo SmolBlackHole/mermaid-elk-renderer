@@ -4,7 +4,7 @@ Re-enables the ELK (Eclipse Layout Kernel) renderer for Mermaid diagrams in Obsi
 
 If you ever looked at a Mermaid graph and thought, "this could use more layout engine and slightly more chaos," this plugin is for you.
 
-## What it does
+## What this plugin does
 
 - Registers ELK layouts via `@mermaid-js/layout-elk`.
 - Enables ELK only where `%% elk %%` is present, unless you explicitly route all diagrams through ELK.
@@ -12,21 +12,11 @@ If you ever looked at a Mermaid graph and thought, "this could use more layout e
 - Preserves existing frontmatter, so things like `theme: neutral` or `look: handDrawn` still work.
 - Adds guardrails for common Mermaid label edge cases, because users are creative and regexes are patient.
 
-## Mermaid docs
-
-If you want the full Mermaid feature set, syntax, and examples, start here:
-
-- [Mermaid introduction](https://mermaid.js.org/intro/)
-
-## What it does not do
-
-- It does not magically make Obsidian's built-in Mermaid support every new Mermaid feature except if you enable the bundled Mermaid 11 option.
-- It does not phone home.
-- It does not judge your diagrams. Much.
-
-By default, this plugin keeps using Obsidian's Mermaid instance and only injects `config.layout: "elk"` for routed diagrams.
-
-If you enable **Use bundled Mermaid 11**, the plugin renders through Mermaid `11.15.0` bundled with the plugin instead. That is useful for newer diagram types such as `treemap-beta` when Obsidian's built-in Mermaid is behind.
+> [!tip] Start simple
+> In most cases you only need one thing: add `%% elk %%` to the diagram you want to route through ELK.
+>
+> > [!question] Need more control later?
+> > Check the advanced settings guide in [docs/advanced-settings.md](docs/advanced-settings.md).
 
 ## Installation
 
@@ -44,7 +34,7 @@ If you enable **Use bundled Mermaid 11**, the plugin renders through Mermaid `11
 4. Copy the three files into that folder.
 5. Enable the plugin in Obsidian.
 
-## Basic usage
+## Quick start
 
 Add `%% elk %%` near the top of any Mermaid block:
 
@@ -57,9 +47,17 @@ flowchart LR
 ```
 ````
 
-## `handDrawn` example
+That is enough to get ELK layout on that diagram.
 
-Frontmatter is preserved, so Mermaid config like `look: handDrawn` and `theme: neutral` can be used together with ELK:
+## Small examples
+
+> [!info] Why these are images
+> The diagrams below are prerendered SVGs.
+> The raw Mermaid source only works live when the plugin is enabled, **Use bundled Mermaid 11** is on, and the `%% elk %%` marker routes the diagram through the plugin.
+
+### ELK flowchart
+
+![Prerendered ELK flowchart](assets/prerendered/readme-elk-flowchart.svg)
 
 ````markdown
 ```mermaid
@@ -69,97 +67,98 @@ config:
   theme: neutral
 ---
 %% elk %%
-flowchart TD
-  M["1. Motivation<br/>Warum AM?"]
-  AD["2. Anforderung<br/>Begriffsdefinition"]
-  SK["3. Systemkontext<br/>und Scope"]
-  WV["4. Was vs. Wie"]
-
-  M --> AD
-  AD --> SK
-  AD --> WV
-
-  style M fill:#e8f5e9,stroke:#4caf50
-  style AD fill:#e8f5e9,stroke:#4caf50
-  style SK fill:#e8f5e9,stroke:#4caf50
-  style WV fill:#e8f5e9,stroke:#4caf50
+flowchart LR
+    Draft["1. Draft"] --> Review["2. Review"]
+    Review --> Ship["3. Ship"]
 ```
 ````
 
-A small Mermaid quirk worth knowing:
+### Mermaid 11 XY chart
 
-- `look: handDrawn` affects the general drawing style.
-- Explicit `style ... fill:... stroke:...` rules still apply strongly.
-- So if some nodes look less sketchy than expected, that is usually Mermaid styling behavior, not the ELK patch trying to ruin your day.
+![Prerendered Mermaid 11 XY chart](assets/prerendered/readme-xychart.svg)
+
+````markdown
+```mermaid
+%% elk %%
+xychart-beta
+    title "Feature requests"
+    x-axis [Q1, Q2, Q3, Q4]
+    y-axis "Count" 0 --> 12
+    bar [3, 7, 10, 8]
+    line [2, 5, 9, 11]
+```
+````
+
+### Mermaid 11 architecture diagram
+
+![Prerendered Mermaid 11 architecture diagram](assets/prerendered/readme-architecture.svg)
+
+````markdown
+```mermaid
+%% elk %%
+architecture-beta
+    group app(cloud)[App]
+
+    service web(server)[Web] in app
+    service db(database)[DB] in app
+    service disk(disk)[Assets] in app
+
+    web:R -- L:db
+    disk:T -- B:web
+```
+````
+
+> [!example] Want more than the tiny version?
+> Open the Mermaid 11 showcase page in [docs/mermaid-11-examples.md](docs/mermaid-11-examples.md).
+
+## Everyday tips
+
+> [!tip] Use per-diagram routing first
+> Keep `Apply elk to all diagrams` off until you know you want ELK everywhere.
+
+> [!example] Mermaid config is preserved
+> Existing frontmatter such as `look: handDrawn` or `theme: neutral` stays intact when the plugin injects `layout: "elk"`.
+
+> [!warning] Restart note
+> The plugin tries to rerender previews immediately after changes.
+> A full Obsidian restart is still the cleanest reset after changing plugin settings. This is a limitation of how Mermaid and Obsidian's rendering pipeline work.
 
 ## Settings
 
 Open **Settings -> Community plugins -> Mermaid ELK Renderer**.
 
-### General
+The most important options are:
 
 - **Debug logging**: enables local debug logs in the developer console.
 - **Escape numbered labels**: prevents labels like `1. Step` from being interpreted as Markdown lists by Mermaid.
 - **Apply elk to all diagrams**: routes every Mermaid diagram through ELK, even without the marker.
 - **Override existing layout**: replaces an existing Mermaid `config.layout` value with `elk`.
 - **Use bundled Mermaid 11**: uses bundled Mermaid `11.15.0` instead of Obsidian's Mermaid.
+- **Default Mermaid look** and **Default Mermaid theme**: set global defaults for routed diagrams without overwriting diagram-specific frontmatter.
 
-### Regex overrides
+> [!danger] Danger zone
+> The regex overrides are for real edge cases.
+> If your diagrams already render correctly, leave that section alone and enjoy your day.
+> If they do not, open an issue: [github.com/SmolBlackHole/mermaid-elk-renderer/issues](https://github.com/SmolBlackHole/mermaid-elk-renderer/issues)
 
-There is also a small expert section for regex overrides.
+## Mermaid docs
 
-These defaults are already configured by the plugin, but you can tweak them if you hit a weird label edge case and feel like negotiating with regular expressions directly:
+If you want the full Mermaid feature set, syntax, and examples, start here:
 
-- **Ordered label regex**
-- **Ordered label replacement**
-- **Quoted label regex**
-- **Bracket label regex**
+- [Mermaid introduction](https://mermaid.js.org/intro/)
 
-The default replacement uses a zero-width-space strategy instead of a visible backslash, so labels like these should render normally:
+## More docs
 
-- `4. Was vs. Wie`
-- `6. Kano-Modell`
-- `10. Rueckverfolgbarkeit`
+- [Advanced settings and examples](docs/advanced-settings.md)
+- [Mermaid 11 example renders](docs/mermaid-11-examples.md)
+- [Support, bug reports, and debug reports](docs/support.md)
+- [Development notes](docs/development.md)
 
-If you change regex overrides, you are officially in "I know what I am doing" territory.
+## What it does not do
 
-## Restart note
-
-For reliable results, restart Obsidian after changing plugin settings.
-
-Yes, the plugin does try to rerender previews immediately. Also yes, Obsidian plugin lifecycles can still be dramatic.
-
-## Support
-
-The settings page includes a **Support** section with:
-
-- a repository link
-- an issue tracker link
-- a **Copy debug report** button
-
-### Reporting bugs
-
-When opening an issue, use **Copy debug report** first and paste the result into the GitHub issue template.
-
-The plugin keeps logs locally in memory and does not upload them anywhere. You choose what to share.
-
-Repository:
-
-- [GitHub repository](https://github.com/SmolBlackHole/mermaid-elk-renderer)
-- [Issue tracker](https://github.com/SmolBlackHole/mermaid-elk-renderer/issues/new/choose)
-
-## Development structure
-
-The plugin is split into small modules:
-
-- `main.ts` coordinates plugin lifecycle, settings, and report generation.
-- `settings.ts` renders the Obsidian settings UI.
-- `settings-data.ts` defines settings, defaults, and normalization.
-- `renderer.ts` contains pure Mermaid source transformation logic.
-- `mermaid-provider.ts` selects Obsidian Mermaid or bundled Mermaid.
-- `renderer-patch.ts` installs and restores the Mermaid proxy.
-- `preview-refresh.ts` rerenders open Markdown previews.
-- `logger.ts` stores recent logs and drives the debug report.
+- It does not magically make Obsidian's built-in Mermaid support every new Mermaid feature unless you enable bundled Mermaid 11.
+- It does not phone home.
+- It does not judge your diagrams. Much.
 
 ## License
 

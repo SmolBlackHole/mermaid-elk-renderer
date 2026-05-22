@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { prepareElkSource, type PreparedElkSource } from "../renderer";
-import { DEFAULT_SETTINGS, type MermaidElkRendererSettings } from "../settings-data";
+import { prepareElkSource, type PreparedElkSource } from "../src/renderer";
+import { DEFAULT_SETTINGS, type MermaidElkRendererSettings } from "../src/settings-data";
 
 const withSettings = (settings: Partial<MermaidElkRendererSettings>): MermaidElkRendererSettings => ({
     ...DEFAULT_SETTINGS,
