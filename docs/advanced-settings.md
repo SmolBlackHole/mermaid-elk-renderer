@@ -8,9 +8,12 @@ By default, the plugin keeps using Obsidian's Mermaid instance and only injects 
 
 If you enable **Use bundled Mermaid 11**, the plugin renders through Mermaid `11.15.0` bundled with the plugin instead. That is useful for newer diagram types such as `treemap-beta` when Obsidian's built-in Mermaid is behind.
 
+> [!important] What this toggle really does
+> **Use bundled Mermaid 11** makes the plugin load a newer Mermaid runtime from the plugin itself.
+> In practice, this is the switch to use when you find a diagram in the official Mermaid docs and it does not work in plain Obsidian yet.
+> Official Mermaid docs: [Mermaid introduction](https://mermaid.js.org/intro/)
 > [!tip] When to turn this on
 > Enable bundled Mermaid 11 if a diagram works in current Mermaid docs but fails in Obsidian's built-in renderer.
-
 > [!example] Need something to test with
 > Open [mermaid-11-examples.md](mermaid-11-examples.md) and try the showcase diagrams there.
 

@@ -4,12 +4,19 @@ Back to the main guide: [README](../README.md)
 
 > [!info] What this page is for
 > This page is a small showcase you can open in Obsidian or on GitHub when you want to demonstrate what the bundled Mermaid 11 renderer unlocks.
-
+> [!important] This page exists because of the bundled Mermaid 11 toggle
+> When **Use bundled Mermaid 11** is enabled, the plugin loads Mermaid `11.15.0` from the plugin instead of Obsidian's older bundled Mermaid.
+> That is why these examples are worth showing off in the first place.
+> Official Mermaid docs: [Mermaid introduction](https://mermaid.js.org/intro/)
 > [!tip] Best way to view it
 > The images on this page are prerendered for GitHub and plain Markdown viewers.
 > To render the source snippets live in Obsidian, enable **Use bundled Mermaid 11** and keep the `%% elk %%` marker in the snippet.
 
 ## Architecture diagram
+
+<!-- markdownlint-disable MD033 -->
+<details>
+<summary>Open architecture example</summary>
 
 ![Prerendered architecture diagram](../assets/prerendered/showcase-architecture.svg)
 
@@ -28,7 +35,12 @@ architecture-beta
 ```
 ````
 
+</details>
+
 ## XY chart
+
+<details>
+<summary>Open XY chart example</summary>
 
 ![Prerendered XY chart](../assets/prerendered/showcase-xychart.svg)
 
@@ -50,7 +62,12 @@ xychart-beta
 ```
 ````
 
+</details>
+
 ## Treemap diagram
+
+<details>
+<summary>Open treemap example</summary>
 
 ![Prerendered treemap diagram](../assets/prerendered/showcase-treemap.svg)
 
@@ -67,7 +84,12 @@ treemap-beta
 ```
 ````
 
+</details>
+
 ## Packet diagram
+
+<details>
+<summary>Open packet example</summary>
 
 ![Prerendered packet diagram](../assets/prerendered/showcase-packet.svg)
 
@@ -86,7 +108,12 @@ packet
 ```
 ````
 
+</details>
+
 ## Radar diagram
+
+<details>
+<summary>Open radar example</summary>
 
 ![Prerendered radar diagram](../assets/prerendered/showcase-radar.svg)
 
@@ -105,6 +132,9 @@ radar-beta
   min 0
 ```
 ````
+
+</details>
+<!-- markdownlint-enable MD033 -->
 
 ## Notes
 
