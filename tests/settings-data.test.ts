@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { DEFAULT_SETTINGS, normalizeSettings } from "../settings-data";
+import { DEFAULT_SETTINGS, normalizeSettings } from "../src/settings-data";
 
 void test("normalizeSettings returns defaults for missing or invalid data", () => {
     assert.deepEqual(normalizeSettings(null), DEFAULT_SETTINGS);

@@ -4,6 +4,7 @@ import { BUNDLED_MERMAID_VERSION, DEFAULT_SETTINGS } from "./settings-data";
 
 const REPOSITORY_URL = "https://github.com/SmolBlackHole/mermaid-elk-renderer";
 const ISSUE_TRACKER_URL = "https://github.com/SmolBlackHole/mermaid-elk-renderer/issues/new/choose";
+const MERMAID_DOCS_URL = "https://mermaid.js.org/intro/";
 
 export class MermaidElkRendererSettingTab extends PluginSettingTab {
     plugin: MermaidElkRendererPlugin;
@@ -191,15 +192,36 @@ export class MermaidElkRendererSettingTab extends PluginSettingTab {
 
         new Setting(containerEl).setName("Experimental").setHeading();
 
+        const bundledMermaidNoticeEl = containerEl.createDiv({ cls: "mermaid-elk-settings-warning" });
+        bundledMermaidNoticeEl.createDiv({
+            cls: "mermaid-elk-settings-warning-title",
+            text: `Use bundled Mermaid ${BUNDLED_MERMAID_VERSION} to load a newer Mermaid version`,
+        });
+        bundledMermaidNoticeEl.createDiv({
+            cls: "mermaid-elk-settings-warning-body",
+            text: "This option makes the plugin load the newer Mermaid runtime from the plugin itself instead of Obsidian's older bundled Mermaid. Use it when examples from the official Mermaid docs do not work in plain Obsidian yet.",
+        });
+
         new Setting(containerEl)
             .setName("Use bundled Mermaid 11")
-            .setDesc(`Render through Mermaid ${BUNDLED_MERMAID_VERSION} bundled with this plugin instead of Obsidian's bundled Mermaid.`)
+            .setDesc(`Load Mermaid ${BUNDLED_MERMAID_VERSION} from this plugin instead of Obsidian's bundled Mermaid. This is the option to enable for newer Mermaid docs examples.`)
             .addToggle((toggle) =>
                 toggle
                     .setValue(this.plugin.settings.useBundledMermaid)
                     .onChange(async (value) => {
                         this.plugin.settings.useBundledMermaid = value;
                         await this.plugin.saveSettings();
+                    })
+            );
+
+        new Setting(containerEl)
+            .setName("Official Mermaid docs")
+            .setDesc("Open the Mermaid documentation for newer diagram types, syntax, and examples.")
+            .addButton((button) =>
+                button
+                    .setButtonText("Open Mermaid docs")
+                    .onClick(() => {
+                        window.open(MERMAID_DOCS_URL, "_blank", "noopener,noreferrer");
                     })
             );
 

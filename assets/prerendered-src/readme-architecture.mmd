@@ -1,0 +1,9 @@
+architecture-beta
+    group app(cloud)[App]
+
+    service web(server)[Web] in app
+    service db(database)[DB] in app
+    service disk(disk)[Assets] in app
+
+    web:R -- L:db
+    disk:T -- B:web
