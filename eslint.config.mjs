@@ -23,4 +23,13 @@ export default defineConfig([
             "no-console": ["error", { allow: ["log", "warn", "error", "debug"] }],
         },
     },
+    {
+        files: ["tests/**/*.ts"],
+        languageOptions: {
+            globals: { ...globals.node },
+        },
+        rules: {
+            "import/no-nodejs-modules": "off",
+        },
+    },
 ]);

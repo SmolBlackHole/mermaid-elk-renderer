@@ -1,16 +1,10 @@
-import { loadMermaid, Plugin } from "obsidian";
+import { loadMermaid, MarkdownView, Plugin } from "obsidian";
 import elkLayouts from "@mermaid-js/layout-elk";
+import { MermaidElkRendererSettingTab } from "./settings";
+import { DEFAULT_SETTINGS, normalizeSettings, type MermaidElkRendererSettings } from "./settings-data";
+import { prepareElkSource } from "./renderer";
 
-const ELK_MARKER_LINE_RE = /^%%\s*elk\s*%%$/i;
-const INIT_DIRECTIVE_LINE_RE = /^%%\{[\s\S]*\}%%$/;
-const FRONTMATTER_DELIMITER = "---";
-const FRONTMATTER_RE = /^\s*---\r?\n([\s\S]*?)\r?\n---\s*(?:\r?\n)?/;
-const ELK_LAYOUT_FRONTMATTER = "---\nconfig:\n  layout: \"elk\"\n---\n";
 const PATCH_FLAG = "__mermaidElkMarkerPatched";
-const DEBUG_LOGS = true;
-const ORDERED_LIST_MARKER_RE = /(^|<br\s*\/?>)(\s*)(\d+)\.(?=\s)/gi;
-const QUOTED_LABEL_RE = /"([^"\\]*(?:\\.[^"\\]*)*)"/g;
-const BRACKET_LABEL_RE = /\[([^[]\]\n]*(?:<br\s*\/?>[^[]\]\n]*)*)\]/gi;
 
 type RenderFn = (id: string, source: string, ...rest: unknown[]) => Promise<unknown>;
 
@@ -20,26 +14,16 @@ interface MermaidLike extends Record<string, unknown> {
 	registerLayoutLoaders?: (layouts: unknown) => void;
 }
 
-type MarkerRemovalResult = {
-	hasMarker: boolean;
-	markerLine: number | null;
-	source: string;
-};
-
-type PreparedElkSource = {
-	hasFrontmatter: boolean;
-	markerLine: number;
-	sanitizedListLabels: boolean;
-	source: string;
-};
-
 export default class MermaidElkRendererPlugin extends Plugin {
+	settings: MermaidElkRendererSettings = { ...DEFAULT_SETTINGS };
+
 	private _originalMermaid: MermaidLike | null = null;
 	private _previousWindowMermaid: MermaidLike | undefined;
 	private _patchedMermaid: MermaidLike | null = null;
+	private _refreshTimer: number | null = null;
 
 	private log(message: string, details?: Record<string, unknown>) {
-		if (!DEBUG_LOGS) return;
+		if (!this.settings.debugLogging) return;
 		if (details) {
 			console.log(`${this.manifest.name}: ${message}`, details);
 			return;
@@ -48,95 +32,42 @@ export default class MermaidElkRendererPlugin extends Plugin {
 		console.log(`${this.manifest.name}: ${message}`);
 	}
 
-	private sanitizeMarkdownListLabels(source: string): string {
-		const escapeOrderedListMarkers = (label: string) =>
-			label.replace(ORDERED_LIST_MARKER_RE, "$1$2$3\\.");
-
-		return source
-			.replace(QUOTED_LABEL_RE, (match, label: string) => `"${escapeOrderedListMarkers(label)}"`)
-			.replace(BRACKET_LABEL_RE, (match, label: string) => `[${escapeOrderedListMarkers(label)}]`);
+	async loadSettings() {
+		const data: unknown = await this.loadData();
+		this.settings = normalizeSettings(data);
 	}
 
-	private removeElkMarker(source: string): MarkerRemovalResult {
-		const lines = source.split(/\r?\n/);
-		let frontmatterChecked = false;
+	async saveSettings() {
+		this.settings = normalizeSettings(this.settings);
+		await this.saveData(this.settings);
+		this.queuePreviewRefresh();
+	}
 
-		for (let index = 0; index < lines.length; index++) {
-			const trimmed = lines[index].trim();
-
-			if (!trimmed) continue;
-
-			if (!frontmatterChecked && trimmed === FRONTMATTER_DELIMITER) {
-				frontmatterChecked = true;
-				index++;
-				while (index < lines.length && lines[index].trim() !== FRONTMATTER_DELIMITER) {
-					index++;
-				}
-				continue;
-			}
-
-			frontmatterChecked = true;
-
-			if (INIT_DIRECTIVE_LINE_RE.test(trimmed)) continue;
-
-			if (ELK_MARKER_LINE_RE.test(trimmed)) {
-				lines.splice(index, 1);
-				return { hasMarker: true, markerLine: index + 1, source: lines.join("\n") };
-			}
-
-			return { hasMarker: false, markerLine: null, source };
+	private queuePreviewRefresh() {
+		if (this._refreshTimer !== null) {
+			window.clearTimeout(this._refreshTimer);
 		}
 
-		return { hasMarker: false, markerLine: null, source };
+		this._refreshTimer = window.setTimeout(() => {
+			this._refreshTimer = null;
+			this.refreshOpenMarkdownPreviews();
+		}, 120);
 	}
 
-	private upsertElkLayoutInFrontmatter(body: string): string {
-		const lines = body.split(/\r?\n/);
-		const configIndex = lines.findIndex((line) => /^config:\s*$/.test(line));
+	private refreshOpenMarkdownPreviews() {
+		const leaves = this.app.workspace.getLeavesOfType("markdown");
+		let refreshedLeaves = 0;
 
-		if (configIndex === -1) {
-			return [...lines, "config:", "  layout: \"elk\""].join("\n").replace(/^\n/, "");
+		for (const leaf of leaves) {
+			const view = leaf.view;
+			if (!(view instanceof MarkdownView)) continue;
+			if (view.getMode() !== "preview") continue;
+
+			view.previewMode.rerender(true);
+			refreshedLeaves++;
 		}
 
-		let insertIndex = configIndex + 1;
-		for (let index = configIndex + 1; index < lines.length; index++) {
-			const line = lines[index];
-			if (line.trim() && !/^\s/.test(line)) break;
-
-			if (/^\s+layout\s*:/.test(line)) {
-				const indent = line.match(/^\s*/)?.[0] ?? "  ";
-				lines[index] = `${indent}layout: "elk"`;
-				return lines.join("\n");
-			}
-
-			insertIndex = index + 1;
-		}
-
-		lines.splice(insertIndex, 0, "  layout: \"elk\"");
-		return lines.join("\n");
-	}
-
-	private injectElkLayoutConfig(source: string): string {
-		const match = source.match(FRONTMATTER_RE);
-		if (!match) return `${ELK_LAYOUT_FRONTMATTER}${source}`;
-
-		const updatedBody = this.upsertElkLayoutInFrontmatter(match[1]);
-		const rest = source.slice(match[0].length);
-		return `${FRONTMATTER_DELIMITER}\n${updatedBody}\n${FRONTMATTER_DELIMITER}\n${rest}`;
-	}
-
-	private prepareElkSource(source: string): PreparedElkSource | null {
-		const marker = this.removeElkMarker(source);
-		if (!marker.hasMarker) return null;
-
-		const hasFrontmatter = FRONTMATTER_RE.test(marker.source);
-		const cleanSource = this.sanitizeMarkdownListLabels(marker.source);
-		return {
-			hasFrontmatter,
-			markerLine: marker.markerLine ?? 0,
-			sanitizedListLabels: cleanSource !== marker.source,
-			source: this.injectElkLayoutConfig(cleanSource),
-		};
+		this.log("refreshed markdown previews", { refreshedLeaves });
 	}
 
 	private markPatched(mermaid: MermaidLike) {
@@ -156,6 +87,9 @@ export default class MermaidElkRendererPlugin extends Plugin {
 	}
 
 	async onload() {
+		await this.loadSettings();
+		this.addSettingTab(new MermaidElkRendererSettingTab(this.app, this));
+
 		this.log(`Loading ${this.manifest.name} ${this.manifest.version}`);
 		const mermaid = await loadMermaid() as unknown as MermaidLike;
 		if (PATCH_FLAG in mermaid) {
@@ -172,10 +106,16 @@ export default class MermaidElkRendererPlugin extends Plugin {
 
 		this.patchMarkerRouting(mermaid);
 		this.log("renderer patch installed", { hasMermaidAPI: Boolean(mermaid.mermaidAPI) });
+		this.queuePreviewRefresh();
 	}
 
 	onunload() {
 		this.log(`Unloading ${this.manifest.name} ${this.manifest.version}`);
+		if (this._refreshTimer !== null) {
+			window.clearTimeout(this._refreshTimer);
+			this._refreshTimer = null;
+		}
+
 		const win = window as Window & { mermaid?: MermaidLike };
 		if (this._originalMermaid && win.mermaid === this._patchedMermaid) {
 			win.mermaid = this._previousWindowMermaid ?? this._originalMermaid;
@@ -184,6 +124,7 @@ export default class MermaidElkRendererPlugin extends Plugin {
 			this._previousWindowMermaid = undefined;
 			this._patchedMermaid = null;
 			this.log("renderer patch restored");
+			this.refreshOpenMarkdownPreviews();
 		} else if (this._originalMermaid) {
 			this.log("renderer patch not restored because window.mermaid changed after patching");
 		}
@@ -192,15 +133,19 @@ export default class MermaidElkRendererPlugin extends Plugin {
 	private wrapRender(original: RenderFn, thisArg: MermaidLike): RenderFn {
 		return (id: string, source: string, ...rest: unknown[]): Promise<unknown> => {
 			const src = typeof source === "string" ? source : String(source ?? "");
-			const prepared = this.prepareElkSource(src);
+			const prepared = prepareElkSource(src, this.settings);
 			if (!prepared) {
 				return original.call(thisArg, id, source, ...rest);
 			}
 
 			this.log("routing diagram through ELK", {
+				appliedBy: prepared.appliedBy,
+				changedLayout: prepared.changedLayout,
+				hadExistingLayout: prepared.hadExistingLayout,
 				id,
 				hasFrontmatter: prepared.hasFrontmatter,
 				markerLine: prepared.markerLine,
+				preservedExistingLayout: prepared.preservedExistingLayout,
 				sanitizedListLabels: prepared.sanitizedListLabels,
 			});
 			return original.call(thisArg, id, prepared.source, ...rest);

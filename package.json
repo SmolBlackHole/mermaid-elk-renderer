@@ -6,8 +6,9 @@
   "scripts": {
     "dev": "node esbuild.config.mjs",
     "build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
-    "lint": "eslint main.ts",
-    "lint:fix": "eslint main.ts --fix"
+    "test": "node --import tsx --test tests/renderer.test.ts tests/settings-data.test.ts",
+    "lint": "eslint main.ts settings.ts settings-data.ts renderer.ts tests/**/*.ts",
+    "lint:fix": "eslint main.ts settings.ts settings-data.ts renderer.ts tests/**/*.ts --fix"
   },
   "keywords": [],
   "author": "SmolBlackHole",
@@ -26,6 +27,7 @@
     "eslint-plugin-obsidianmd": "^0.1.9",
     "obsidian": "^1.12.3",
     "tslib": "^2.4.0",
+    "tsx": "^4.22.3",
     "typescript": "^6.0.2"
   }
 }

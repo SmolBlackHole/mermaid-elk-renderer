@@ -32,11 +32,7 @@ That means Mermaid syntax support still depends on the Mermaid version shipped w
 1. Open Obsidian Settings and go to **Community Plugins**.
 2. Search for **Mermaid ELK Renderer** and install it.
 3. Enable the plugin.
-4. Restart Obsidian so the ELK renderer patch is fully applied.
-5. After restarting, verify the plugin is still shown as enabled under Community Plugins.
-
-> [!warning]
-> A restart is required after enabling the plugin. Without it, the ELK renderer patch is not applied and `%% elk %%` diagrams will not render correctly.
+4. Open a note with Mermaid diagrams. Open previews are refreshed automatically when the plugin loads.
 
 ### Manual Installation
 
@@ -48,8 +44,7 @@ That means Mermaid syntax support still depends on the Mermaid version shipped w
 3. At the bottom of the installed plugins list, click the folder icon on the right. This opens the plugins folder in your file explorer.
 4. Create a new folder named `mermaid-elk-renderer` inside that folder.
 5. Copy `main.js`, `manifest.json`, and `styles.css` into it.
-6. Restart Obsidian, then enable **Mermaid ELK Renderer** under Community Plugins.
-7. Restart Obsidian once more and verify the plugin is still shown as enabled.
+6. Enable **Mermaid ELK Renderer** under Community Plugins.
 
 ## Usage
 
@@ -79,6 +74,20 @@ flowchart LR
 
 > [!tip]
 > All diagrams without `%% elk %%` continue to use the default Mermaid renderer. You can mix ELK and non-ELK diagrams freely in the same vault.
+
+## Settings
+
+Open **Settings** -> **Community plugins** -> **Mermaid ELK Renderer** to configure the plugin.
+
+- **Debug logging** logs plugin startup, renderer patching, and ELK routing decisions to the developer console.
+- **Escape numbered labels** prevents labels like `1. Step` from being interpreted as Markdown lists by Mermaid.
+- **Marker text** changes the text used inside the marker. The default marker is `%% elk %%`.
+- **Apply ELK to all diagrams** routes every Mermaid diagram through ELK, even without the marker.
+- **Override existing layout** replaces an existing Mermaid `config.layout` value with `elk` when a diagram is routed through this plugin.
+- **Reset settings** restores all plugin settings to their defaults.
+
+> [!info]
+> Settings are applied immediately. The plugin refreshes open Markdown previews automatically after each settings change.
 
 ## License
 
