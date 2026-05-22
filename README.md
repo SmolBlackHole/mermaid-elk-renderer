@@ -5,19 +5,22 @@ Re-enables the ELK (Eclipse Layout Kernel) renderer for Mermaid diagrams in Obsi
 ## Features
 
 - Registers ELK layouts via `@mermaid-js/layout-elk`.
-- Keeps default Mermaid behavior for all other diagrams unchanged.
+- Keeps default Mermaid behavior for all other diagrams unchanged unless the bundled Mermaid option is enabled.
+- Can optionally render through a bundled experimental Mermaid 11 build.
 - Enables ELK only where `%% elk %%` is set, on a per-diagram basis.
 - Preserves custom `classDef` styling.
 - Respects Obsidian's light and dark mode color scheme.
 
 ## What this plugin changes
 
-This plugin does not replace Obsidian's bundled Mermaid version. It only registers the ELK layout provider and routes diagrams marked with `%% elk %%` through Obsidian's existing Mermaid renderer with `config.layout` set to `elk`.
+By default, this plugin does not replace Obsidian's bundled Mermaid version. It only registers the ELK layout provider and routes diagrams marked with `%% elk %%` through Obsidian's existing Mermaid renderer with `config.layout` set to `elk`.
 
 That means Mermaid syntax support still depends on the Mermaid version shipped with your Obsidian installation. New upstream Mermaid diagram types or syntax are not added by this plugin unless Obsidian already supports them.
 
+An experimental setting can switch rendering to Mermaid 11 bundled with this plugin. This may enable newer upstream Mermaid diagram types before Obsidian ships them, but it can also behave differently from Obsidian's tested Mermaid version.
+
 > [!info]
-> Diagrams without `%% elk %%` are left alone and continue to use Obsidian's default Mermaid rendering path.
+> Diagrams without `%% elk %%` are not forced through ELK. When the bundled Mermaid option is disabled, they continue to use Obsidian's default Mermaid rendering path.
 
 ## Screenshots
 
@@ -73,7 +76,7 @@ flowchart LR
 ````
 
 > [!tip]
-> All diagrams without `%% elk %%` continue to use the default Mermaid renderer. You can mix ELK and non-ELK diagrams freely in the same vault.
+> Diagrams without `%% elk %%` continue to use the default Mermaid layout. You can mix ELK and non-ELK diagrams freely in the same vault.
 
 ## Settings
 
@@ -84,10 +87,23 @@ Open **Settings** -> **Community plugins** -> **Mermaid ELK Renderer** to config
 - **Marker text** changes the text used inside the marker. The default marker is `%% elk %%`.
 - **Apply ELK to all diagrams** routes every Mermaid diagram through ELK, even without the marker.
 - **Override existing layout** replaces an existing Mermaid `config.layout` value with `elk` when a diagram is routed through this plugin.
+- **Use bundled Mermaid 11** renders through Mermaid 11 bundled with this plugin instead of Obsidian's bundled Mermaid. This option is experimental.
 - **Reset settings** restores all plugin settings to their defaults.
 
 > [!info]
 > Settings are applied immediately. The plugin refreshes open Markdown previews automatically after each settings change.
+
+## Development
+
+The plugin is split into small adapter modules:
+
+- `main.ts` owns the Obsidian plugin lifecycle and coordinates settings, patching, and preview refreshes.
+- `settings.ts` renders the Obsidian settings UI.
+- `settings-data.ts` defines the settings model, defaults, and normalization.
+- `renderer.ts` contains pure Mermaid source transformation logic.
+- `mermaid-provider.ts` selects either Obsidian's Mermaid instance or the bundled experimental Mermaid build.
+- `renderer-patch.ts` installs and restores the Mermaid proxy used for ELK routing.
+- `preview-refresh.ts` refreshes open Markdown previews after plugin or settings changes.
 
 ## License
 

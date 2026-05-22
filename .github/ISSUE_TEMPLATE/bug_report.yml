@@ -1,0 +1,92 @@
+name: Bug report
+description: Report a bug with Mermaid ELK Renderer
+title: "bug: "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a bug.
+        Please include enough detail so the issue can be reproduced.
+
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: What is happening and what did you expect instead?
+      placeholder: A short description of the bug and expected behavior.
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to reproduce
+      description: Include a minimal Mermaid snippet if possible.
+      placeholder: |
+        1. Open note ...
+        2. Add Mermaid block ...
+        3. Enable/disable setting ...
+        4. Observe error ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: mermaid-snippet
+    attributes:
+      label: Mermaid snippet
+      description: Paste the Mermaid diagram that triggers the issue.
+      render: markdown
+
+  - type: dropdown
+    id: bundled-renderer
+    attributes:
+      label: Use bundled Mermaid 11 enabled?
+      options:
+        - "Yes"
+        - "No"
+        - "Not sure"
+    validations:
+      required: true
+
+  - type: input
+    id: obsidian-version
+    attributes:
+      label: Obsidian version
+      placeholder: e.g. 1.8.10
+    validations:
+      required: true
+
+  - type: input
+    id: plugin-version
+    attributes:
+      label: Mermaid ELK Renderer version
+      placeholder: e.g. 1.0.2
+    validations:
+      required: true
+
+  - type: input
+    id: os
+    attributes:
+      label: Operating system
+      placeholder: e.g. Windows 11, macOS 15, Ubuntu 24.04
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Console logs / error output
+      description: Paste relevant logs from Obsidian developer console.
+      render: text
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checklist
+      options:
+        - label: I searched existing issues before creating this report.
+          required: true
+        - label: I can reproduce this with minimal steps.
+          required: true

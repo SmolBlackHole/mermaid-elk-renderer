@@ -1,186 +1,122 @@
-import { loadMermaid, MarkdownView, Plugin } from "obsidian";
-import elkLayouts from "@mermaid-js/layout-elk";
+import { Notice, Plugin } from "obsidian";
 import { MermaidElkRendererSettingTab } from "./settings";
 import { DEFAULT_SETTINGS, normalizeSettings, type MermaidElkRendererSettings } from "./settings-data";
-import { prepareElkSource } from "./renderer";
-
-const PATCH_FLAG = "__mermaidElkMarkerPatched";
-
-type RenderFn = (id: string, source: string, ...rest: unknown[]) => Promise<unknown>;
-
-interface MermaidLike extends Record<string, unknown> {
-	render: RenderFn;
-	mermaidAPI?: MermaidLike;
-	registerLayoutLoaders?: (layouts: unknown) => void;
-}
+import { MermaidProvider } from "./mermaid-provider";
+import { MarkdownPreviewRefresher } from "./preview-refresh";
+import { MermaidRendererPatch } from "./renderer-patch";
+import { PluginLogger } from "./logger";
 
 export default class MermaidElkRendererPlugin extends Plugin {
-	settings: MermaidElkRendererSettings = { ...DEFAULT_SETTINGS };
+    settings: MermaidElkRendererSettings = { ...DEFAULT_SETTINGS };
 
-	private _originalMermaid: MermaidLike | null = null;
-	private _previousWindowMermaid: MermaidLike | undefined;
-	private _patchedMermaid: MermaidLike | null = null;
-	private _refreshTimer: number | null = null;
+    private mermaidProviderInstance: MermaidProvider | null = null;
+    private previewRefresherInstance: MarkdownPreviewRefresher | null = null;
+    private rendererPatchInstance: MermaidRendererPatch | null = null;
+    private loggerInstance: PluginLogger | null = null;
 
-	private log(message: string, details?: Record<string, unknown>) {
-		if (!this.settings.debugLogging) return;
-		if (details) {
-			console.log(`${this.manifest.name}: ${message}`, details);
-			return;
-		}
+    private get logger() {
+        if (!this.loggerInstance) {
+            this.loggerInstance = new PluginLogger(
+                () => this.manifest.name,
+                () => this.settings.debugLogging,
+            );
+        }
 
-		console.log(`${this.manifest.name}: ${message}`);
-	}
+        return this.loggerInstance;
+    }
 
-	async loadSettings() {
-		const data: unknown = await this.loadData();
-		this.settings = normalizeSettings(data);
-	}
+    private get mermaidProvider() {
+        if (!this.mermaidProviderInstance) {
+            this.mermaidProviderInstance = new MermaidProvider(this.logger.child("provider"));
+        }
 
-	async saveSettings() {
-		this.settings = normalizeSettings(this.settings);
-		await this.saveData(this.settings);
-		this.queuePreviewRefresh();
-	}
+        return this.mermaidProviderInstance;
+    }
 
-	private queuePreviewRefresh() {
-		if (this._refreshTimer !== null) {
-			window.clearTimeout(this._refreshTimer);
-		}
+    private get previewRefresher() {
+        if (!this.previewRefresherInstance) {
+            this.previewRefresherInstance = new MarkdownPreviewRefresher(this.app, this.logger.child("preview"));
+        }
 
-		this._refreshTimer = window.setTimeout(() => {
-			this._refreshTimer = null;
-			this.refreshOpenMarkdownPreviews();
-		}, 120);
-	}
+        return this.previewRefresherInstance;
+    }
 
-	private refreshOpenMarkdownPreviews() {
-		const leaves = this.app.workspace.getLeavesOfType("markdown");
-		let refreshedLeaves = 0;
+    private get rendererPatch() {
+        if (!this.rendererPatchInstance) {
+            this.rendererPatchInstance = new MermaidRendererPatch(
+                () => this.settings,
+                this.logger.child("patch"),
+                (message) => new Notice(message, 8000),
+            );
+        }
 
-		for (const leaf of leaves) {
-			const view = leaf.view;
-			if (!(view instanceof MarkdownView)) continue;
-			if (view.getMode() !== "preview") continue;
+        return this.rendererPatchInstance;
+    }
 
-			view.previewMode.rerender(true);
-			refreshedLeaves++;
-		}
+    async loadSettings() {
+        const data: unknown = await this.loadData();
+        this.settings = normalizeSettings(data);
+        this.logger.debug("loaded settings", {
+            applyElkToAllDiagrams: this.settings.applyElkToAllDiagrams,
+            debugLogging: this.settings.debugLogging,
+            markerText: this.settings.markerText,
+            useBundledMermaid: this.settings.useBundledMermaid,
+        });
+    }
 
-		this.log("refreshed markdown previews", { refreshedLeaves });
-	}
+    async saveSettings() {
+        const previousUseBundledMermaid = this.settings.useBundledMermaid;
+        this.settings = normalizeSettings(this.settings);
+        await this.saveData(this.settings);
+        this.logger.debug("saved settings", {
+            applyElkToAllDiagrams: this.settings.applyElkToAllDiagrams,
+            debugLogging: this.settings.debugLogging,
+            markerText: this.settings.markerText,
+            useBundledMermaid: this.settings.useBundledMermaid,
+        });
 
-	private markPatched(mermaid: MermaidLike) {
-		try {
-			Object.defineProperty(mermaid, PATCH_FLAG, { value: true, configurable: true });
-		} catch {
-			// Non-extensible Mermaid objects are still protected by the proxy `has` trap.
-		}
-	}
+        if (this.rendererPatch.activeUseBundledMermaid !== null && this.rendererPatch.activeUseBundledMermaid !== this.settings.useBundledMermaid) {
+            await this.installRendererPatch();
+            this.previewRefresher.refreshNow("Mermaid provider toggled");
+            this.previewRefresher.queue("Mermaid provider toggled", 280);
+            return;
+        }
 
-	private clearPatchFlag(mermaid: MermaidLike) {
-		try {
-			delete mermaid[PATCH_FLAG];
-		} catch {
-			// Ignore cleanup failures from non-configurable host objects.
-		}
-	}
+        if (previousUseBundledMermaid !== this.settings.useBundledMermaid) {
+            this.logger.debug("detected Mermaid provider change before patch activation", {
+                from: previousUseBundledMermaid,
+                to: this.settings.useBundledMermaid,
+            });
+        }
 
-	async onload() {
-		await this.loadSettings();
-		this.addSettingTab(new MermaidElkRendererSettingTab(this.app, this));
+        this.previewRefresher.queue("settings change");
+    }
 
-		this.log(`Loading ${this.manifest.name} ${this.manifest.version}`);
-		const mermaid = await loadMermaid() as unknown as MermaidLike;
-		if (PATCH_FLAG in mermaid) {
-			this.log("mermaid already patched, skipping");
-			return;
-		}
+    async onload() {
+        await this.loadSettings();
+        this.addSettingTab(new MermaidElkRendererSettingTab(this.app, this));
 
-		if (typeof mermaid.registerLayoutLoaders === "function") {
-			mermaid.registerLayoutLoaders(elkLayouts);
-			this.log("registered ELK layout loaders");
-		} else {
-			this.log("registerLayoutLoaders unavailable on Obsidian Mermaid instance");
-		}
+        this.logger.debug(`loading ${this.manifest.name} ${this.manifest.version}`);
+        await this.installRendererPatch();
+        this.previewRefresher.refreshNow("plugin enabled immediate");
+        this.previewRefresher.queue("plugin enabled follow-up", 280);
+    }
 
-		this.patchMarkerRouting(mermaid);
-		this.log("renderer patch installed", { hasMermaidAPI: Boolean(mermaid.mermaidAPI) });
-		this.queuePreviewRefresh();
-	}
+    onunload() {
+        this.logger.debug(`unloading ${this.manifest.name} ${this.manifest.version}`);
+        this.previewRefresher.cancelQueuedRefresh();
+        const restored = this.rendererPatch.restore();
+        this.previewRefresher.refreshNow(restored ? "plugin disabled after patch restore" : "plugin disabled without patch restore");
+    }
 
-	onunload() {
-		this.log(`Unloading ${this.manifest.name} ${this.manifest.version}`);
-		if (this._refreshTimer !== null) {
-			window.clearTimeout(this._refreshTimer);
-			this._refreshTimer = null;
-		}
+    private async installRendererPatch() {
+        const restoredBeforeInstall = this.rendererPatch.restore();
+        this.logger.debug("starting renderer patch install", {
+            restoredBeforeInstall,
+            useBundledMermaid: this.settings.useBundledMermaid,
+        });
 
-		const win = window as Window & { mermaid?: MermaidLike };
-		if (this._originalMermaid && win.mermaid === this._patchedMermaid) {
-			win.mermaid = this._previousWindowMermaid ?? this._originalMermaid;
-			this.clearPatchFlag(this._originalMermaid);
-			this._originalMermaid = null;
-			this._previousWindowMermaid = undefined;
-			this._patchedMermaid = null;
-			this.log("renderer patch restored");
-			this.refreshOpenMarkdownPreviews();
-		} else if (this._originalMermaid) {
-			this.log("renderer patch not restored because window.mermaid changed after patching");
-		}
-	}
-
-	private wrapRender(original: RenderFn, thisArg: MermaidLike): RenderFn {
-		return (id: string, source: string, ...rest: unknown[]): Promise<unknown> => {
-			const src = typeof source === "string" ? source : String(source ?? "");
-			const prepared = prepareElkSource(src, this.settings);
-			if (!prepared) {
-				return original.call(thisArg, id, source, ...rest);
-			}
-
-			this.log("routing diagram through ELK", {
-				appliedBy: prepared.appliedBy,
-				changedLayout: prepared.changedLayout,
-				hadExistingLayout: prepared.hadExistingLayout,
-				id,
-				hasFrontmatter: prepared.hasFrontmatter,
-				markerLine: prepared.markerLine,
-				preservedExistingLayout: prepared.preservedExistingLayout,
-				sanitizedListLabels: prepared.sanitizedListLabels,
-			});
-			return original.call(thisArg, id, prepared.source, ...rest);
-		};
-	}
-
-	private patchMarkerRouting(mermaid: MermaidLike) {
-		const win = window as Window & { mermaid?: MermaidLike };
-		this._originalMermaid = mermaid;
-		this._previousWindowMermaid = win.mermaid;
-		this.markPatched(mermaid);
-
-		const patchedRender = this.wrapRender(mermaid.render, mermaid);
-
-		let patchedApi: MermaidLike | undefined;
-		if (mermaid.mermaidAPI && typeof mermaid.mermaidAPI.render === "function") {
-			const api = mermaid.mermaidAPI;
-			const patchedApiRender = this.wrapRender(api.render, api);
-			patchedApi = new Proxy(api, {
-				get: (t, prop, receiver) => prop === "render" ? patchedApiRender : Reflect.get(t, prop, receiver) as unknown,
-				has: (t, prop) => prop === PATCH_FLAG || prop in t,
-			});
-		}
-
-		const patchedMermaid = new Proxy(mermaid, {
-			get: (t, prop, receiver) => {
-				if (prop === "render") return patchedRender;
-				if (prop === "mermaidAPI" && patchedApi) return patchedApi;
-				return Reflect.get(t, prop, receiver) as unknown;
-			},
-			has: (t, prop) => prop === PATCH_FLAG || prop in t,
-		});
-
-		this._patchedMermaid = patchedMermaid;
-		win.mermaid = patchedMermaid;
-	}
+        const selection = await this.mermaidProvider.select(this.settings.useBundledMermaid);
+        this.rendererPatch.install(selection, this.settings.useBundledMermaid);
+    }
 }
-

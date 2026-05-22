@@ -123,3 +123,20 @@ void test("prepareElkSource can leave ordered-list-like labels unchanged", () =>
     assert.equal(nonNullPrepared.sanitizedListLabels, false);
     assert.match(nonNullPrepared.source, /A\[1\. First\] --> B\[2\. Second\]/);
 });
+
+void test("prepareElkSource escapes ordered-list markers in HTML multiline labels without entity artifacts", () => {
+    const prepared = assertPrepared(prepareElkSource([
+        "%% elk %%",
+        "flowchart TD",
+        "  M[\"1. Motivation<br/>Warum AM?\"]",
+        "  AD[\"2. Anforderung<br/>Begriffsdefinition\"]",
+        "  SK[\"3. Systemkontext<br/>und Scope\"]",
+        "  M --> AD",
+        "  AD --> SK",
+    ].join("\n")));
+
+    assert.equal(prepared.sanitizedListLabels, true);
+    assert.match(prepared.source, /M\["1\u200B\. Motivation<br\/>Warum AM\?"\]/);
+    assert.match(prepared.source, /AD\["2\u200B\. Anforderung<br\/>Begriffsdefinition"\]/);
+    assert.doesNotMatch(prepared.source, /1&#46; Motivation<br\/>/);
+});

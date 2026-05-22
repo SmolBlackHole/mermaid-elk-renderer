@@ -4,7 +4,10 @@ export interface MermaidElkRendererSettings {
     markerText: string;
     applyElkToAllDiagrams: boolean;
     overrideExistingLayout: boolean;
+    useBundledMermaid: boolean;
 }
+
+export const BUNDLED_MERMAID_VERSION = "11.15.0";
 
 export const DEFAULT_SETTINGS: MermaidElkRendererSettings = {
     debugLogging: false,
@@ -12,6 +15,7 @@ export const DEFAULT_SETTINGS: MermaidElkRendererSettings = {
     markerText: "elk",
     applyElkToAllDiagrams: false,
     overrideExistingLayout: true,
+    useBundledMermaid: false,
 };
 
 export function normalizeSettings(data: unknown): MermaidElkRendererSettings {
@@ -34,5 +38,8 @@ export function normalizeSettings(data: unknown): MermaidElkRendererSettings {
         overrideExistingLayout: typeof saved.overrideExistingLayout === "boolean"
             ? saved.overrideExistingLayout
             : DEFAULT_SETTINGS.overrideExistingLayout,
+        useBundledMermaid: typeof saved.useBundledMermaid === "boolean"
+            ? saved.useBundledMermaid
+            : DEFAULT_SETTINGS.useBundledMermaid,
     };
 }

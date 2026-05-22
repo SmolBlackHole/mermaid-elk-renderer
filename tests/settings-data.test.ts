@@ -15,6 +15,7 @@ void test("normalizeSettings keeps valid saved values and trims marker text", ()
             markerText: "  elk+beta  ",
             applyElkToAllDiagrams: true,
             overrideExistingLayout: false,
+            useBundledMermaid: true,
         }),
         {
             debugLogging: true,
@@ -22,6 +23,7 @@ void test("normalizeSettings keeps valid saved values and trims marker text", ()
             markerText: "elk+beta",
             applyElkToAllDiagrams: true,
             overrideExistingLayout: false,
+            useBundledMermaid: true,
         },
     );
 });
@@ -34,6 +36,7 @@ void test("normalizeSettings falls back per invalid field", () => {
             markerText: "   ",
             applyElkToAllDiagrams: false,
             overrideExistingLayout: "no",
+            useBundledMermaid: "yes",
         }),
         {
             ...DEFAULT_SETTINGS,

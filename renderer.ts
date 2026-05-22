@@ -5,6 +5,8 @@ const FRONTMATTER_DELIMITER = "---";
 const FRONTMATTER_RE = /^\s*---\r?\n([\s\S]*?)\r?\n---\s*(?:\r?\n)?/;
 const ELK_LAYOUT_FRONTMATTER = "---\nconfig:\n  layout: \"elk\"\n---\n";
 const ORDERED_LIST_MARKER_RE = /(^|<br\s*\/?>)(\s*)(\d+)\.(?=\s)/gi;
+const HTML_LINE_BREAK_RE = /<br\s*\/?>/i;
+const ZERO_WIDTH_SPACE = "\u200B";
 const QUOTED_LABEL_RE = /"([^"\\]*(?:\\.[^"\\]*)*)"/g;
 const BRACKET_LABEL_RE = /\[([^[]\]\n]*(?:<br\s*\/?>[^[]\]\n]*)*)\]/gi;
 const REGEX_SPECIAL_CHARS_RE = /[.*+?^${}()|[\]\\]/g;
@@ -52,8 +54,12 @@ function isElkMarkerLine(line: string, settings: MermaidElkRendererSettings): bo
 function sanitizeMarkdownListLabels(source: string, settings: MermaidElkRendererSettings): string {
     if (!settings.escapeOrderedListLabels) return source;
 
-    const escapeOrderedListMarkers = (label: string) =>
-        label.replace(ORDERED_LIST_MARKER_RE, "$1$2$3\\.");
+    const escapeOrderedListMarkers = (label: string) => {
+        const escapedDot = HTML_LINE_BREAK_RE.test(label) ? `${ZERO_WIDTH_SPACE}.` : "\\.";
+        return label.replace(ORDERED_LIST_MARKER_RE, (_, prefix: string, spaces: string, number: string) =>
+            `${prefix}${spaces}${number}${escapedDot}`,
+        );
+    };
 
     return source
         .replace(QUOTED_LABEL_RE, (match, label: string) => `"${escapeOrderedListMarkers(label)}"`)

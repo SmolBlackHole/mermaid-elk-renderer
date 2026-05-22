@@ -1,6 +1,9 @@
 import { App, Notice, PluginSettingTab, Setting } from "obsidian";
 import type MermaidElkRendererPlugin from "./main";
-import { DEFAULT_SETTINGS } from "./settings-data";
+import { BUNDLED_MERMAID_VERSION, DEFAULT_SETTINGS } from "./settings-data";
+
+const REPOSITORY_URL = "https://github.com/SmolBlackHole/mermaid-elk-renderer";
+const ISSUE_TRACKER_URL = "https://github.com/SmolBlackHole/mermaid-elk-renderer/issues/new/choose";
 
 export class MermaidElkRendererSettingTab extends PluginSettingTab {
     plugin: MermaidElkRendererPlugin;
@@ -13,6 +16,16 @@ export class MermaidElkRendererSettingTab extends PluginSettingTab {
     display(): void {
         const { containerEl } = this;
         containerEl.empty();
+
+        const restartWarningEl = containerEl.createDiv({ cls: "mermaid-elk-settings-warning" });
+        restartWarningEl.createDiv({
+            cls: "mermaid-elk-settings-warning-title",
+            text: "Restart Obsidian after changing settings",
+        });
+        restartWarningEl.createDiv({
+            cls: "mermaid-elk-settings-warning-body",
+            text: "Settings may not apply reliably until Obsidian is restarted.",
+        });
 
         new Setting(containerEl)
             .setName("Debug logging")
@@ -77,6 +90,20 @@ export class MermaidElkRendererSettingTab extends PluginSettingTab {
                     })
             );
 
+        new Setting(containerEl).setName("Experimental").setHeading();
+
+        new Setting(containerEl)
+            .setName("Use bundled Mermaid 11")
+            .setDesc(`Render through Mermaid ${BUNDLED_MERMAID_VERSION} bundled with this plugin instead of Obsidian's bundled Mermaid.`)
+            .addToggle((toggle) =>
+                toggle
+                    .setValue(this.plugin.settings.useBundledMermaid)
+                    .onChange(async (value) => {
+                        this.plugin.settings.useBundledMermaid = value;
+                        await this.plugin.saveSettings();
+                    })
+            );
+
         new Setting(containerEl)
             .setName("Reset settings")
             .setDesc("Restore all plugin options to their defaults.")
@@ -89,6 +116,31 @@ export class MermaidElkRendererSettingTab extends PluginSettingTab {
                         await this.plugin.saveSettings();
                         new Notice("Settings reset.");
                         this.display();
+                    })
+            );
+
+        new Setting(containerEl).setName("Support").setHeading();
+
+        new Setting(containerEl)
+            .setName("GitHub repository")
+            .setDesc("View source code, releases, and documentation.")
+            .addButton((button) =>
+                button
+                    .setButtonText("Open repository")
+                    .onClick(() => {
+                        window.open(REPOSITORY_URL, "_blank", "noopener,noreferrer");
+                    })
+            );
+
+        new Setting(containerEl)
+            .setName("Report an issue")
+            .setDesc("Found a bug or have a request? Please open an issue in the repository.")
+            .addButton((button) =>
+                button
+                    .setButtonText("Open issue tracker")
+                    .setCta()
+                    .onClick(() => {
+                        window.open(ISSUE_TRACKER_URL, "_blank", "noopener,noreferrer");
                     })
             );
     }
