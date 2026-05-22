@@ -8,13 +8,15 @@ body:
     attributes:
       value: |
         Thanks for reporting a bug.
-        Please include enough detail so the issue can be reproduced.
+        Please include enough detail so the issue can be reproduced by another human.
+        In plugin settings, use Support -> Copy debug report and paste it below.
+        Bonus points if your diagram does not require telepathy.
 
   - type: textarea
     id: summary
     attributes:
       label: Summary
-      description: What is happening and what did you expect instead?
+      description: What is happening, and what did you expect instead?
       placeholder: A short description of the bug and expected behavior.
     validations:
       required: true
@@ -27,7 +29,7 @@ body:
       placeholder: |
         1. Open note ...
         2. Add Mermaid block ...
-        3. Enable/disable setting ...
+        3. Enable or disable setting ...
         4. Observe error ...
     validations:
       required: true
@@ -51,34 +53,25 @@ body:
       required: true
 
   - type: input
-    id: obsidian-version
-    attributes:
-      label: Obsidian version
-      placeholder: e.g. 1.8.10
-    validations:
-      required: true
-
-  - type: input
-    id: plugin-version
-    attributes:
-      label: Mermaid ELK Renderer version
-      placeholder: e.g. 1.0.2
-    validations:
-      required: true
-
-  - type: input
-    id: os
+    id: operating-system
     attributes:
       label: Operating system
-      placeholder: e.g. Windows 11, macOS 15, Ubuntu 24.04
+      placeholder: Windows 11, Ubuntu, macOS, solar powered potato, smart fridge, toaster, whatever runs Obsidian today
+
+  - type: textarea
+    id: debug-report
+    attributes:
+      label: Debug report
+      description: Paste the output from Support -> Copy debug report.
+      render: text
     validations:
       required: true
 
   - type: textarea
-    id: logs
+    id: extra-logs
     attributes:
-      label: Console logs / error output
-      description: Paste relevant logs from Obsidian developer console.
+      label: Extra logs (optional)
+      description: Add additional console logs only if they provide extra context beyond the debug report.
       render: text
 
   - type: checkboxes

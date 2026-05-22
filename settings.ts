@@ -143,5 +143,16 @@ export class MermaidElkRendererSettingTab extends PluginSettingTab {
                         window.open(ISSUE_TRACKER_URL, "_blank", "noopener,noreferrer");
                     })
             );
+
+        new Setting(containerEl)
+            .setName("Copy debug report")
+            .setDesc("Copies current plugin settings and recent logs for pasting into an issue.")
+            .addButton((button) =>
+                button
+                    .setButtonText("Copy report")
+                    .onClick(async () => {
+                        await this.plugin.copyDebugReportToClipboard();
+                    })
+            );
     }
 }
