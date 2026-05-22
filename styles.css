@@ -33,3 +33,24 @@
 	font-size: 0.92em;
 	line-height: 1.35;
 }
+
+.mermaid-elk-danger-zone {
+	background: color-mix(in srgb, var(--color-red) 8%, transparent);
+	border: 1px dashed color-mix(in srgb, var(--color-red) 55%, var(--background-modifier-border));
+	border-radius: 10px;
+	padding: 12px 14px;
+	margin: 0 0 14px;
+}
+
+.mermaid-elk-danger-zone-title {
+	color: var(--text-normal);
+	font-weight: 700;
+	margin: 0 0 4px;
+}
+
+.mermaid-elk-danger-zone-body {
+	color: var(--text-muted);
+	font-size: 0.92em;
+	line-height: 1.35;
+	margin: 0 0 10px;
+}

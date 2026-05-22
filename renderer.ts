@@ -1,17 +1,20 @@
-import { DEFAULT_SETTINGS, type MermaidElkRendererSettings } from "./settings-data";
+import {
+    DEFAULT_BRACKET_LABEL_PATTERN,
+    DEFAULT_ORDERED_LIST_MARKER_PATTERN,
+    DEFAULT_ORDERED_LIST_REPLACEMENT,
+    DEFAULT_QUOTED_LABEL_PATTERN,
+    DEFAULT_SETTINGS,
+    type MermaidElkRendererSettings,
+} from "./settings-data";
 
 const INIT_DIRECTIVE_LINE_RE = /^%%\{[\s\S]*\}%%$/;
 const FRONTMATTER_DELIMITER = "---";
 const FRONTMATTER_RE = /^\s*---\r?\n([\s\S]*?)\r?\n---\s*(?:\r?\n)?/;
-const ELK_LAYOUT_FRONTMATTER = "---\nconfig:\n  layout: \"elk\"\n---\n";
-const ORDERED_LIST_MARKER_RE = /(^|<br\s*\/?>)(\s*)(\d+)\.(?=\s)/gi;
-const HTML_LINE_BREAK_RE = /<br\s*\/?>/i;
-const ZERO_WIDTH_SPACE = "\u200B";
-const QUOTED_LABEL_RE = /"([^"\\]*(?:\\.[^"\\]*)*)"/g;
-const BRACKET_LABEL_RE = /\[([^[]\]\n]*(?:<br\s*\/?>[^[]\]\n]*)*)\]/gi;
 const REGEX_SPECIAL_CHARS_RE = /[.*+?^${}()|[\]\\]/g;
 const CONFIG_LINE_RE = /^config:\s*$/;
 const FRONTMATTER_LAYOUT_RE = /^\s+layout\s*:/;
+const FRONTMATTER_LOOK_RE = /^\s+look\s*:/;
+const FRONTMATTER_THEME_RE = /^\s+theme\s*:/;
 const INDENT_RE = /^\s*/;
 
 type MarkerRemovalResult = {
@@ -25,6 +28,11 @@ type LayoutConfigResult = {
     hadLayout: boolean;
     preservedExistingLayout: boolean;
     source: string;
+};
+
+type ConfigDefaults = {
+    look: string;
+    theme: string;
 };
 
 export type PreparedElkSource = {
@@ -51,19 +59,56 @@ function isElkMarkerLine(line: string, settings: MermaidElkRendererSettings): bo
     return new RegExp(`^%%\\s*${marker}\\s*%%$`, "i").test(line.trim());
 }
 
+function createRegExp(pattern: string, fallbackPattern: string, flags: string): RegExp {
+    try {
+        return new RegExp(pattern, flags);
+    } catch {
+        return new RegExp(fallbackPattern, flags);
+    }
+}
+
+function decodeReplacementEscapes(value: string): string {
+    return value
+        .replace(/\\u([0-9a-fA-F]{4})/g, (_, code: string) => String.fromCharCode(Number.parseInt(code, 16)))
+        .replace(/\\n/g, "\n")
+        .replace(/\\r/g, "\r")
+        .replace(/\\t/g, "\t");
+}
+
+function getConfigDefaults(settings: MermaidElkRendererSettings): ConfigDefaults {
+    return {
+        look: settings.defaultMermaidLook.trim(),
+        theme: settings.defaultMermaidTheme.trim(),
+    };
+}
+
+function buildConfigLines(settings: MermaidElkRendererSettings): string[] {
+    const configDefaults = getConfigDefaults(settings);
+    const lines = ["config:", "  layout: \"elk\""];
+    if (configDefaults.look) lines.push(`  look: ${configDefaults.look}`);
+    if (configDefaults.theme) lines.push(`  theme: ${configDefaults.theme}`);
+    return lines;
+}
+
 function sanitizeMarkdownListLabels(source: string, settings: MermaidElkRendererSettings): string {
     if (!settings.escapeOrderedListLabels) return source;
 
-    const escapeOrderedListMarkers = (label: string) => {
-        const escapedDot = HTML_LINE_BREAK_RE.test(label) ? `${ZERO_WIDTH_SPACE}.` : "\\.";
-        return label.replace(ORDERED_LIST_MARKER_RE, (_, prefix: string, spaces: string, number: string) =>
-            `${prefix}${spaces}${number}${escapedDot}`,
-        );
-    };
+    const orderedListMarkerRe = createRegExp(
+        settings.orderedListMarkerPattern,
+        DEFAULT_ORDERED_LIST_MARKER_PATTERN,
+        "gi",
+    );
+    const quotedLabelRe = createRegExp(settings.quotedLabelPattern, DEFAULT_QUOTED_LABEL_PATTERN, "g");
+    const bracketLabelRe = createRegExp(settings.bracketLabelPattern, DEFAULT_BRACKET_LABEL_PATTERN, "gi");
+    const orderedListReplacement = decodeReplacementEscapes(
+        settings.orderedListReplacement || DEFAULT_ORDERED_LIST_REPLACEMENT,
+    );
+
+    const escapeOrderedListMarkers = (label: string) => label.replace(orderedListMarkerRe, orderedListReplacement);
 
     return source
-        .replace(QUOTED_LABEL_RE, (match, label: string) => `"${escapeOrderedListMarkers(label)}"`)
-        .replace(BRACKET_LABEL_RE, (match, label: string) => `[${escapeOrderedListMarkers(label)}]`);
+        .replace(quotedLabelRe, (match, label: string) => `"${escapeOrderedListMarkers(label)}"`)
+        .replace(bracketLabelRe, (match, label: string) => `[${escapeOrderedListMarkers(label)}]`);
 }
 
 function removeElkMarker(source: string, settings: MermaidElkRendererSettings): MarkerRemovalResult {
@@ -102,51 +147,76 @@ function removeElkMarker(source: string, settings: MermaidElkRendererSettings): 
 function upsertElkLayoutInFrontmatter(body: string, settings: MermaidElkRendererSettings): LayoutConfigResult {
     const lines = body.split(/\r?\n/);
     const configIndex = lines.findIndex((line) => CONFIG_LINE_RE.test(line));
+    const configDefaults = getConfigDefaults(settings);
 
     if (configIndex === -1) {
         return {
             changedLayout: true,
             hadLayout: false,
             preservedExistingLayout: false,
-            source: [...lines, "config:", "  layout: \"elk\""].join("\n").replace(/^\n/, ""),
+            source: [...lines, ...buildConfigLines(settings)].join("\n").replace(/^\n/, ""),
         };
     }
 
     let insertIndex = configIndex + 1;
+    let hasLayout = false;
+    let hasLook = false;
+    let hasTheme = false;
+    let replacedExistingLayout = false;
     for (let index = configIndex + 1; index < lines.length; index++) {
         const line = lines[index];
         if (line.trim() && !/^\s/.test(line)) break;
 
         if (FRONTMATTER_LAYOUT_RE.test(line)) {
+            hasLayout = true;
             if (!settings.overrideExistingLayout) {
+                if (FRONTMATTER_LOOK_RE.test(line)) hasLook = true;
+                if (FRONTMATTER_THEME_RE.test(line)) hasTheme = true;
                 return {
                     changedLayout: false,
                     hadLayout: true,
                     preservedExistingLayout: true,
-                    source: lines.join("\n"),
+                    source: insertMissingConfigDefaults(lines, insertIndex, configDefaults, hasLook, hasTheme).join("\n"),
                 };
             }
 
             const indent = line.match(INDENT_RE)?.[0] ?? "  ";
             lines[index] = `${indent}layout: "elk"`;
-            return {
-                changedLayout: true,
-                hadLayout: true,
-                preservedExistingLayout: false,
-                source: lines.join("\n"),
-            };
+            replacedExistingLayout = true;
         }
+
+        if (FRONTMATTER_LOOK_RE.test(line)) hasLook = true;
+        if (FRONTMATTER_THEME_RE.test(line)) hasTheme = true;
 
         insertIndex = index + 1;
     }
 
-    lines.splice(insertIndex, 0, "  layout: \"elk\"");
+    if (!hasLayout) {
+        lines.splice(insertIndex, 0, "  layout: \"elk\"");
+        insertIndex++;
+    }
+
+    const updatedLines = insertMissingConfigDefaults(lines, insertIndex, configDefaults, hasLook, hasTheme);
     return {
-        changedLayout: true,
-        hadLayout: false,
+        changedLayout: replacedExistingLayout || !hasLayout,
+        hadLayout: hasLayout,
         preservedExistingLayout: false,
-        source: lines.join("\n"),
+        source: updatedLines.join("\n"),
     };
+}
+
+function insertMissingConfigDefaults(
+    lines: string[],
+    insertIndex: number,
+    configDefaults: ConfigDefaults,
+    hasLook: boolean,
+    hasTheme: boolean,
+): string[] {
+    const additions: string[] = [];
+    if (configDefaults.look && !hasLook) additions.push(`  look: ${configDefaults.look}`);
+    if (configDefaults.theme && !hasTheme) additions.push(`  theme: ${configDefaults.theme}`);
+    if (additions.length) lines.splice(insertIndex, 0, ...additions);
+    return lines;
 }
 
 function injectElkLayoutConfig(source: string, settings: MermaidElkRendererSettings): LayoutConfigResult {
@@ -156,7 +226,7 @@ function injectElkLayoutConfig(source: string, settings: MermaidElkRendererSetti
             changedLayout: true,
             hadLayout: false,
             preservedExistingLayout: false,
-            source: `${ELK_LAYOUT_FRONTMATTER}${source}`,
+            source: `${FRONTMATTER_DELIMITER}\n${buildConfigLines(settings).join("\n")}\n${FRONTMATTER_DELIMITER}\n${source}`,
         };
     }
 

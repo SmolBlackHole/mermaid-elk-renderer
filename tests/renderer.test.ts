@@ -49,7 +49,7 @@ void test("prepareElkSource finds marker after frontmatter and init directives",
         "---",
         "%%{init: { 'theme': 'dark' }}%%",
         "graph TD",
-        "A[\"1\\. First\"] --> B[\"2\\. Second\"]",
+        "A[\"1\u200B. First\"] --> B[\"2\u200B. Second\"]",
     ].join("\n"));
 });
 
@@ -75,6 +75,35 @@ void test("prepareElkSource can apply elk globally without a marker", () => {
     assert.equal(nonNullPrepared.appliedBy, "global");
     assert.equal(nonNullPrepared.markerLine, null);
     assert.match(nonNullPrepared.source, /layout: "elk"/);
+});
+
+void test("prepareElkSource injects configured Mermaid look and theme", () => {
+    const prepared = assertPrepared(prepareElkSource(
+        "%% elk %%\nflowchart TD\nA --> B",
+        withSettings({ defaultMermaidLook: "handDrawn", defaultMermaidTheme: "neutral" }),
+    ));
+
+    assert.match(prepared.source, /layout: "elk"/);
+    assert.match(prepared.source, /look: handDrawn/);
+    assert.match(prepared.source, /theme: neutral/);
+});
+
+void test("prepareElkSource preserves existing Mermaid look and theme", () => {
+    const prepared = assertPrepared(prepareElkSource([
+        "---",
+        "config:",
+        "  look: classic",
+        "  theme: forest",
+        "---",
+        "%% elk %%",
+        "flowchart TD",
+        "A --> B",
+    ].join("\n"), withSettings({ defaultMermaidLook: "handDrawn", defaultMermaidTheme: "neutral" })));
+
+    assert.match(prepared.source, /look: classic/);
+    assert.match(prepared.source, /theme: forest/);
+    assert.doesNotMatch(prepared.source, /look: handDrawn/);
+    assert.doesNotMatch(prepared.source, /theme: neutral/);
 });
 
 void test("prepareElkSource preserves existing layout when override is disabled", () => {
@@ -139,4 +168,29 @@ void test("prepareElkSource escapes ordered-list markers in HTML multiline label
     assert.match(prepared.source, /M\["1\u200B\. Motivation<br\/>Warum AM\?"\]/);
     assert.match(prepared.source, /AD\["2\u200B\. Anforderung<br\/>Begriffsdefinition"\]/);
     assert.doesNotMatch(prepared.source, /1&#46; Motivation<br\/>/);
+});
+
+void test("prepareElkSource uses configured ordered-list regex replacement", () => {
+    const prepared = assertPrepared(prepareElkSource(
+        "%% elk %%\nflowchart TD\nA[\"4. Was vs. Wie\"] --> B[\"6. Kano-Modell\"]",
+        withSettings({
+            orderedListReplacement: "$1$2$3.)",
+        }),
+    ));
+
+    assert.match(prepared.source, /A\["4\.\) Was vs\. Wie"\]/);
+    assert.match(prepared.source, /B\["6\.\) Kano-Modell"\]/);
+});
+
+void test("prepareElkSource falls back to default regex patterns when custom regex is invalid", () => {
+    const prepared = assertPrepared(prepareElkSource(
+        "%% elk %%\nflowchart TD\nA[\"10. Rueckverfolgbarkeit\"]",
+        withSettings({
+            orderedListMarkerPattern: "(",
+            quotedLabelPattern: "(",
+            bracketLabelPattern: "(",
+        }),
+    ));
+
+    assert.match(prepared.source, /A\["10\u200B\. Rueckverfolgbarkeit"\]/);
 });

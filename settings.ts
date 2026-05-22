@@ -90,6 +90,105 @@ export class MermaidElkRendererSettingTab extends PluginSettingTab {
                     })
             );
 
+        new Setting(containerEl).setName("Styling").setHeading();
+
+        new Setting(containerEl)
+            .setName("Default Mermaid look")
+            .setDesc("Optional default look for routed diagrams. Existing diagram config wins if present.")
+            .addDropdown((dropdown) =>
+                dropdown
+                    .addOption("", "Preserve existing")
+                    .addOption("classic", "Classic")
+                    .addOption("handDrawn", "Hand drawn")
+                    .setValue(this.plugin.settings.defaultMermaidLook)
+                    .onChange(async (value) => {
+                        this.plugin.settings.defaultMermaidLook = value;
+                        await this.plugin.saveSettings();
+                    })
+            );
+
+        new Setting(containerEl)
+            .setName("Default Mermaid theme")
+            .setDesc("Optional default theme for routed diagrams. Existing frontmatter still takes priority.")
+            .addDropdown((dropdown) =>
+                dropdown
+                    .addOption("", "Preserve existing")
+                    .addOption("default", "Default")
+                    .addOption("neutral", "Neutral")
+                    .addOption("dark", "Dark")
+                    .addOption("forest", "Forest")
+                    .addOption("base", "Base")
+                    .setValue(this.plugin.settings.defaultMermaidTheme)
+                    .onChange(async (value) => {
+                        this.plugin.settings.defaultMermaidTheme = value;
+                        await this.plugin.saveSettings();
+                    })
+            );
+
+        new Setting(containerEl).setName("Danger zone").setHeading();
+
+        const dangerZoneEl = containerEl.createDiv({ cls: "mermaid-elk-danger-zone" });
+        dangerZoneEl.createDiv({
+            cls: "mermaid-elk-danger-zone-title",
+            text: "Do not touch unless you know what you're doing",
+        });
+        dangerZoneEl.createDiv({
+            cls: "mermaid-elk-danger-zone-body",
+            text: "Regex overrides live here. If everything already works, this section is mostly a trap with form controls.",
+        });
+
+        new Setting(dangerZoneEl)
+            .setName("Ordered label regex")
+            .setDesc("Regex used to detect numbered list markers inside labels. Advanced. Mildly cursed.")
+            .addTextArea((text) =>
+                text
+                    .setPlaceholder(DEFAULT_SETTINGS.orderedListMarkerPattern)
+                    .setValue(this.plugin.settings.orderedListMarkerPattern)
+                    .onChange(async (value) => {
+                        this.plugin.settings.orderedListMarkerPattern = value.trim() || DEFAULT_SETTINGS.orderedListMarkerPattern;
+                        await this.plugin.saveSettings();
+                    })
+            );
+
+        new Setting(dangerZoneEl)
+            .setName("Ordered label replacement")
+            .setDesc("Replacement used for detected numbered labels.")
+            .addText((text) =>
+                text
+                    .setPlaceholder(DEFAULT_SETTINGS.orderedListReplacement)
+                    .setValue(this.plugin.settings.orderedListReplacement)
+                    .onChange(async (value) => {
+                        this.plugin.settings.orderedListReplacement = value || DEFAULT_SETTINGS.orderedListReplacement;
+                        await this.plugin.saveSettings();
+                    })
+            );
+
+        new Setting(dangerZoneEl)
+            .setName("Quoted label regex")
+            .setDesc("Regex used to find quoted Mermaid labels before replacements are applied.")
+            .addTextArea((text) =>
+                text
+                    .setPlaceholder(DEFAULT_SETTINGS.quotedLabelPattern)
+                    .setValue(this.plugin.settings.quotedLabelPattern)
+                    .onChange(async (value) => {
+                        this.plugin.settings.quotedLabelPattern = value.trim() || DEFAULT_SETTINGS.quotedLabelPattern;
+                        await this.plugin.saveSettings();
+                    })
+            );
+
+        new Setting(dangerZoneEl)
+            .setName("Bracket label regex")
+            .setDesc("Regex used to find bracket-style Mermaid labels before replacements are applied.")
+            .addTextArea((text) =>
+                text
+                    .setPlaceholder(DEFAULT_SETTINGS.bracketLabelPattern)
+                    .setValue(this.plugin.settings.bracketLabelPattern)
+                    .onChange(async (value) => {
+                        this.plugin.settings.bracketLabelPattern = value.trim() || DEFAULT_SETTINGS.bracketLabelPattern;
+                        await this.plugin.saveSettings();
+                    })
+            );
+
         new Setting(containerEl).setName("Experimental").setHeading();
 
         new Setting(containerEl)
