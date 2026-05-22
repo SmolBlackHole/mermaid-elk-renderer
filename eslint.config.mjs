@@ -20,6 +20,7 @@ export default defineConfig([
             ...tsPlugin.configs.recommended.rules,
             "@typescript-eslint/no-explicit-any": "error",
             "@typescript-eslint/no-unused-vars": "error",
+            "no-console": ["error", { allow: ["log", "warn", "error", "debug"] }],
         },
     },
 ]);

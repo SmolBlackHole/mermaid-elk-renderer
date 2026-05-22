@@ -10,6 +10,15 @@ Re-enables the ELK (Eclipse Layout Kernel) renderer for Mermaid diagrams in Obsi
 - Preserves custom `classDef` styling.
 - Respects Obsidian's light and dark mode color scheme.
 
+## What this plugin changes
+
+This plugin does not replace Obsidian's bundled Mermaid version. It only registers the ELK layout provider and routes diagrams marked with `%% elk %%` through Obsidian's existing Mermaid renderer with `config.layout` set to `elk`.
+
+That means Mermaid syntax support still depends on the Mermaid version shipped with your Obsidian installation. New upstream Mermaid diagram types or syntax are not added by this plugin unless Obsidian already supports them.
+
+> [!info]
+> Diagrams without `%% elk %%` are left alone and continue to use Obsidian's default Mermaid rendering path.
+
 ## Screenshots
 
 ![Example 1](assets/example_1.png)
