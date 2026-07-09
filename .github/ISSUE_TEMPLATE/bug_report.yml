@@ -8,9 +8,8 @@ body:
     attributes:
       value: |
         Thanks for reporting a bug.
-        Please include enough detail so the issue can be reproduced by another human.
-        In plugin settings, use Support -> Copy debug report and paste it below.
-        Bonus points if your diagram does not require telepathy.
+        Please include enough detail so the issue can be reproduced.
+        In plugin settings, use Support, Copy debug report and paste it below.
 
   - type: textarea
     id: summary
@@ -56,7 +55,7 @@ body:
     id: operating-system
     attributes:
       label: Operating system
-      placeholder: Windows 11, Ubuntu, macOS, solar powered potato, smart fridge, toaster, whatever runs Obsidian today
+      placeholder: Windows 11, macOS 15, Ubuntu 24.04, etc.
 
   - type: textarea
     id: debug-report

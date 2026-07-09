@@ -8,18 +8,20 @@
     "build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
     "test": "node --import tsx --test tests/renderer.test.ts tests/settings-data.test.ts",
     "lint": "eslint src/**/*.ts tests/**/*.ts",
-    "lint:fix": "eslint src/**/*.ts tests/**/*.ts --fix"
+    "lint:fix": "eslint src/**/*.ts tests/**/*.ts --fix",
+    "render-svgs": "node scripts/render-svgs.mjs"
   },
   "keywords": [],
   "author": "SmolBlackHole",
   "license": "MIT",
   "type": "commonjs",
   "dependencies": {
-    "@mermaid-js/layout-elk": "^0.2.1",
-    "mermaid": "^11.15.0",
+    "@mermaid-js/layout-elk": "^0.2.2",
+    "mermaid": "^11.16.0",
     "mermaid-layout-elk-obsidian": "npm:@mermaid-js/layout-elk@0.2.0"
   },
   "devDependencies": {
+    "@mermaid-js/mermaid-cli": "^11.16.0",
     "@types/node": "^16.18.126",
     "@typescript-eslint/eslint-plugin": "^8.58.0",
     "@typescript-eslint/parser": "^8.58.0",

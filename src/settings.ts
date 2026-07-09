@@ -28,6 +28,8 @@ export class MermaidElkRendererSettingTab extends PluginSettingTab {
             text: "Settings may not apply reliably until Obsidian is restarted.",
         });
 
+        new Setting(containerEl).setName("General").setHeading();
+
         new Setting(containerEl)
             .setName("Debug logging")
             .setDesc("Log plugin startup, renderer patching, and elk routing decisions to the developer console.")
@@ -52,7 +54,7 @@ export class MermaidElkRendererSettingTab extends PluginSettingTab {
                     })
             );
 
-        new Setting(containerEl).setName("Advanced").setHeading();
+        new Setting(containerEl).setName("Routing").setHeading();
 
         new Setting(containerEl)
             .setName("Marker text")
@@ -126,6 +128,92 @@ export class MermaidElkRendererSettingTab extends PluginSettingTab {
                     })
             );
 
+        new Setting(containerEl).setName("Experimental").setHeading();
+
+        const bundledMermaidNoticeEl = containerEl.createDiv({ cls: "mermaid-elk-settings-warning" });
+        bundledMermaidNoticeEl.createDiv({
+            cls: "mermaid-elk-settings-warning-title",
+            text: `Use bundled Mermaid ${BUNDLED_MERMAID_VERSION} to load a newer Mermaid version`,
+        });
+        bundledMermaidNoticeEl.createDiv({
+            cls: "mermaid-elk-settings-warning-body",
+            text: "This option makes the plugin load the newer Mermaid runtime from the plugin itself instead of Obsidian's older bundled Mermaid. Use it when examples from the official Mermaid docs do not work in plain Obsidian yet.",
+        });
+
+        new Setting(containerEl)
+            .setName("Use bundled Mermaid 11")
+            .setDesc(`Load Mermaid ${BUNDLED_MERMAID_VERSION} from this plugin instead of Obsidian's bundled Mermaid. This is the option to enable for newer Mermaid docs examples.`)
+            .addToggle((toggle) =>
+                toggle
+                    .setValue(this.plugin.settings.useBundledMermaid)
+                    .onChange(async (value) => {
+                        this.plugin.settings.useBundledMermaid = value;
+                        await this.plugin.saveSettings();
+                    })
+            );
+
+        new Setting(containerEl)
+            .setName("Official Mermaid docs")
+            .setDesc("Open the Mermaid documentation for newer diagram types, syntax, and examples.")
+            .addButton((button) =>
+                button
+                    .setButtonText("Open Mermaid docs")
+                    .onClick(() => {
+                        window.open(MERMAID_DOCS_URL, "_blank", "noopener,noreferrer");
+                    })
+            );
+
+        new Setting(containerEl).setName("Support").setHeading();
+
+        new Setting(containerEl)
+            .setName("GitHub repository")
+            .setDesc("View source code, releases, and documentation.")
+            .addButton((button) =>
+                button
+                    .setButtonText("Open repository")
+                    .onClick(() => {
+                        window.open(REPOSITORY_URL, "_blank", "noopener,noreferrer");
+                    })
+            );
+
+        new Setting(containerEl)
+            .setName("Report an issue")
+            .setDesc("Found a bug or have a request? Please open an issue in the repository.")
+            .addButton((button) =>
+                button
+                    .setButtonText("Open issue tracker")
+                    .setCta()
+                    .onClick(() => {
+                        window.open(ISSUE_TRACKER_URL, "_blank", "noopener,noreferrer");
+                    })
+            );
+
+        new Setting(containerEl)
+            .setName("Copy debug report")
+            .setDesc("Copies current plugin settings and recent logs for pasting into an issue.")
+            .addButton((button) =>
+                button
+                    .setButtonText("Copy report")
+                    .onClick(async () => {
+                        await this.plugin.copyDebugReportToClipboard();
+                    })
+            );
+
+        new Setting(containerEl)
+            .setName("Reset settings")
+            .setDesc("Restore all plugin options to their defaults.")
+            .addButton((button) =>
+                button
+                    .setButtonText("Reset")
+                    .setWarning()
+                    .onClick(async () => {
+                        this.plugin.settings = { ...DEFAULT_SETTINGS };
+                        await this.plugin.saveSettings();
+                        new Notice("Settings reset.");
+                        this.display();
+                    })
+            );
+
         new Setting(containerEl).setName("Danger zone").setHeading();
 
         const dangerZoneEl = containerEl.createDiv({ cls: "mermaid-elk-danger-zone" });
@@ -140,7 +228,7 @@ export class MermaidElkRendererSettingTab extends PluginSettingTab {
 
         new Setting(dangerZoneEl)
             .setName("Ordered label regex")
-            .setDesc("Regex used to detect numbered list markers inside labels. Advanced. Mildly cursed.")
+            .setDesc("Regex used to detect numbered list markers inside labels.")
             .addTextArea((text) =>
                 text
                     .setPlaceholder(DEFAULT_SETTINGS.orderedListMarkerPattern)
@@ -187,92 +275,6 @@ export class MermaidElkRendererSettingTab extends PluginSettingTab {
                     .onChange(async (value) => {
                         this.plugin.settings.bracketLabelPattern = value.trim() || DEFAULT_SETTINGS.bracketLabelPattern;
                         await this.plugin.saveSettings();
-                    })
-            );
-
-        new Setting(containerEl).setName("Experimental").setHeading();
-
-        const bundledMermaidNoticeEl = containerEl.createDiv({ cls: "mermaid-elk-settings-warning" });
-        bundledMermaidNoticeEl.createDiv({
-            cls: "mermaid-elk-settings-warning-title",
-            text: `Use bundled Mermaid ${BUNDLED_MERMAID_VERSION} to load a newer Mermaid version`,
-        });
-        bundledMermaidNoticeEl.createDiv({
-            cls: "mermaid-elk-settings-warning-body",
-            text: "This option makes the plugin load the newer Mermaid runtime from the plugin itself instead of Obsidian's older bundled Mermaid. Use it when examples from the official Mermaid docs do not work in plain Obsidian yet.",
-        });
-
-        new Setting(containerEl)
-            .setName("Use bundled Mermaid 11")
-            .setDesc(`Load Mermaid ${BUNDLED_MERMAID_VERSION} from this plugin instead of Obsidian's bundled Mermaid. This is the option to enable for newer Mermaid docs examples.`)
-            .addToggle((toggle) =>
-                toggle
-                    .setValue(this.plugin.settings.useBundledMermaid)
-                    .onChange(async (value) => {
-                        this.plugin.settings.useBundledMermaid = value;
-                        await this.plugin.saveSettings();
-                    })
-            );
-
-        new Setting(containerEl)
-            .setName("Official Mermaid docs")
-            .setDesc("Open the Mermaid documentation for newer diagram types, syntax, and examples.")
-            .addButton((button) =>
-                button
-                    .setButtonText("Open Mermaid docs")
-                    .onClick(() => {
-                        window.open(MERMAID_DOCS_URL, "_blank", "noopener,noreferrer");
-                    })
-            );
-
-        new Setting(containerEl)
-            .setName("Reset settings")
-            .setDesc("Restore all plugin options to their defaults.")
-            .addButton((button) =>
-                button
-                    .setButtonText("Reset")
-                    .setWarning()
-                    .onClick(async () => {
-                        this.plugin.settings = { ...DEFAULT_SETTINGS };
-                        await this.plugin.saveSettings();
-                        new Notice("Settings reset.");
-                        this.display();
-                    })
-            );
-
-        new Setting(containerEl).setName("Support").setHeading();
-
-        new Setting(containerEl)
-            .setName("GitHub repository")
-            .setDesc("View source code, releases, and documentation.")
-            .addButton((button) =>
-                button
-                    .setButtonText("Open repository")
-                    .onClick(() => {
-                        window.open(REPOSITORY_URL, "_blank", "noopener,noreferrer");
-                    })
-            );
-
-        new Setting(containerEl)
-            .setName("Report an issue")
-            .setDesc("Found a bug or have a request? Please open an issue in the repository.")
-            .addButton((button) =>
-                button
-                    .setButtonText("Open issue tracker")
-                    .setCta()
-                    .onClick(() => {
-                        window.open(ISSUE_TRACKER_URL, "_blank", "noopener,noreferrer");
-                    })
-            );
-
-        new Setting(containerEl)
-            .setName("Copy debug report")
-            .setDesc("Copies current plugin settings and recent logs for pasting into an issue.")
-            .addButton((button) =>
-                button
-                    .setButtonText("Copy report")
-                    .onClick(async () => {
-                        await this.plugin.copyDebugReportToClipboard();
                     })
             );
     }
