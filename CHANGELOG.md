@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.2.0
+
+- Updated bundled Mermaid to 11.16.0 and @mermaid-js/layout-elk to 0.2.2.
+- Reorganized the settings tab into clear sections (General, Routing, Styling, Experimental, Support, Danger zone).
+- Added live example files in `examples/` that can be copied into any vault.
+- Added six new prerendered SVG showcases (cynefin, railroad IR, railroad EBNF, railroad PEG, pie, treeView).
+- Added `npm run render-svgs` script that renders all .mmd sources to SVG and regenerates the examples doc page.
+- Added `assets/prerendered-meta.json` to centralize diagram metadata.
+- Rewrote README for clarity, embedded `example_1.png` as hero image, added settings table.
+- Reworded the documentation files for clarity, added support and development sections.
+
 ## 1.1.0
 
 - Added optional bundled Mermaid 11 rendering for newer diagram support.

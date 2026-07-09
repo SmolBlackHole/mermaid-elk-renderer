@@ -1,0 +1,13 @@
+railroad-beta
+    title REST API Routes
+    route = sequence(
+        optional(choice(
+            terminal("GET"),
+            terminal("POST"),
+            terminal("PUT"),
+            terminal("DELETE"))),
+        terminal("/api/"),
+        oneOrMore(nonterminal("resource")),
+        optional(sequence(
+            terminal("/"),
+            nonterminal("id"))));

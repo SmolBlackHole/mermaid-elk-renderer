@@ -1,0 +1,107 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "readme": [
+    {
+      "id": "readme-elk-flowchart",
+      "title": "ELK flowchart",
+      "diagram": "flowchart",
+      "look": "handDrawn",
+      "theme": "neutral",
+      "needsBundledMermaid": false,
+      "description": "A small flowchart with hand drawn look and ELK layout applied."
+    },
+    {
+      "id": "readme-xychart",
+      "title": "XY chart",
+      "diagram": "xychart-beta",
+      "needsBundledMermaid": true,
+      "description": "A bar and line chart showing feature requests per quarter."
+    },
+    {
+      "id": "readme-architecture",
+      "title": "Architecture diagram",
+      "diagram": "architecture-beta",
+      "needsBundledMermaid": true,
+      "description": "A cloud architecture layout with services, database, and assets."
+    }
+  ],
+  "showcase": [
+    {
+      "id": "showcase-architecture",
+      "title": "Architecture diagram",
+      "diagram": "architecture-beta",
+      "needsBundledMermaid": true,
+      "description": "API group with web server, database, and cache services."
+    },
+    {
+      "id": "showcase-xychart",
+      "title": "XY chart",
+      "diagram": "xychart-beta",
+      "needsBundledMermaid": true,
+      "description": "Release activity tracked as bar and line chart over six months."
+    },
+    {
+      "id": "showcase-treemap",
+      "title": "Treemap diagram",
+      "diagram": "treemap-beta",
+      "needsBundledMermaid": true,
+      "description": "Work breakdown for the plugin by area."
+    },
+    {
+      "id": "showcase-packet",
+      "title": "Packet diagram",
+      "diagram": "packet",
+      "needsBundledMermaid": false,
+      "description": "UDP packet layout showing port, length, checksum, and data fields."
+    },
+    {
+      "id": "showcase-radar",
+      "title": "Radar diagram",
+      "diagram": "radar-beta",
+      "needsBundledMermaid": true,
+      "description": "Grade comparison between two students across six subjects."
+    },
+    {
+      "id": "showcase-cynefin",
+      "title": "Cynefin framework",
+      "diagram": "cynefin-beta",
+      "needsBundledMermaid": true,
+      "description": "Five complexity domains with decision models. New in Mermaid 11.16."
+    },
+    {
+      "id": "showcase-railroad-ir",
+      "title": "Railroad diagram (IR)",
+      "diagram": "railroad-beta",
+      "needsBundledMermaid": true,
+      "description": "REST API route grammar using the IR constructor syntax. New in Mermaid 11.16."
+    },
+    {
+      "id": "showcase-railroad-ebnf",
+      "title": "Railroad diagram (EBNF)",
+      "diagram": "railroad-ebnf-beta",
+      "needsBundledMermaid": true,
+      "description": "Arithmetic grammar in ISO 14977 EBNF notation. New in Mermaid 11.16."
+    },
+    {
+      "id": "showcase-railroad-peg",
+      "title": "Railroad diagram (PEG)",
+      "diagram": "railroad-peg-beta",
+      "needsBundledMermaid": true,
+      "description": "Calculator grammar in PEG notation. New in Mermaid 11.16."
+    },
+    {
+      "id": "showcase-pie",
+      "title": "Pie chart",
+      "diagram": "pie",
+      "needsBundledMermaid": false,
+      "description": "Project time distribution with showData labels. New in Mermaid 11.16."
+    },
+    {
+      "id": "showcase-treeview",
+      "title": "TreeView diagram",
+      "diagram": "treeView-beta",
+      "needsBundledMermaid": true,
+      "description": "Plugin project structure rendered as a file tree. New in Mermaid 11.16."
+    }
+  ]
+}
