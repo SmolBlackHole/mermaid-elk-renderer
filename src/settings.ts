@@ -28,7 +28,7 @@ export class MermaidElkRendererSettingTab extends PluginSettingTab {
             text: "Settings may not apply reliably until Obsidian is restarted.",
         });
 
-        new Setting(containerEl).setName("General").setHeading();
+        new Setting(containerEl).setName("Basics").setHeading();
 
         new Setting(containerEl)
             .setName("Debug logging")
