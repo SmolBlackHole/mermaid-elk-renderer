@@ -7,7 +7,7 @@ Re-enables the ELK (Eclipse Layout Kernel) layout engine for Mermaid diagrams in
 ## What this plugin does
 
 - Adds `%% elk %%` marker support. Put the marker inside any Mermaid block and that diagram gets ELK layout.
-- Can optionally load Mermaid 11.16.0 from the plugin instead of Obsidian's older built-in Mermaid. This is the switch for newer diagram types like `xychart-beta`, `cynefin-beta`, or `railroad-beta`.
+- Can optionally load Mermaid 11.16.1 from the plugin instead of Obsidian's older built-in Mermaid. This is the switch for newer diagram types like `xychart-beta`, `cynefin-beta`, or `railroad-beta`.
 - Preserves your existing frontmatter. `look: handDrawn`, `theme: neutral`, and other config values stay intact.
 
 > [!tip] Start simple
@@ -62,7 +62,7 @@ Open **Settings, Community plugins, Mermaid ELK Renderer**.
 | Setting | What it does |
 |---|---|
 | **Debug logging** | Logs plugin activity to the developer console. **THIS DATA WILL NOT LEAVE YOUR DEVICE OR BE SENT OVER THE INTERNET** |
-| **Use bundled Mermaid 11** | Load Mermaid 11.16.0 from the plugin. Turn this on when a diagram from the official Mermaid docs does not work in stock Obsidian. |
+| **Use bundled Mermaid 11** | Load Mermaid 11.16.1 from the plugin. Turn this on when a diagram from the official Mermaid docs does not work in stock Obsidian. |
 | **Apply elk to all diagrams** | Route every Mermaid diagram through ELK, marker or not. |
 | **Override existing layout** | Replace an existing `config.layout` with `elk`. |
 | **Escape numbered labels** | Prevent labels like `1. Step` from triggering Markdown list rendering inside Mermaid. |

@@ -1,5 +1,5 @@
 import type { MermaidElkRendererSettings } from "./settings-data";
-import { prepareElkSource } from "./renderer";
+import { getMermaidSourceDiagnostics, prepareElkSource } from "./renderer";
 import { PluginLogger } from "./logger";
 import { PATCH_FLAG, type MermaidLike, type MermaidSelection, type RenderFn } from "./mermaid-types";
 
@@ -12,6 +12,7 @@ export class MermaidRendererPatch {
     private patchedMermaid: MermaidLike | null = null;
     private registeredElkLayouts = new WeakSet<MermaidLike>();
     private activeBundledMermaidSetting: boolean | null = null;
+    private activeMermaidSource: string | null = null;
     private shownBundledMermaidHint = false;
 
     constructor(
@@ -32,8 +33,9 @@ export class MermaidRendererPatch {
         }
 
         this.registerElkLayouts(mermaid, selection.elkLayouts, selection.source);
-        this.patchMarkerRouting(mermaid, selection.restoreMermaid);
+        this.patchMarkerRouting(mermaid, selection.restoreMermaid, selection.source);
         this.activeBundledMermaidSetting = useBundledMermaid;
+        this.activeMermaidSource = selection.source;
         this.logger.debug("renderer patch installed", {
             hasMermaidAPI: Boolean(mermaid.mermaidAPI),
             source: selection.source,
@@ -49,6 +51,7 @@ export class MermaidRendererPatch {
             this.previousWindowMermaid = undefined;
             this.patchedMermaid = null;
             this.activeBundledMermaidSetting = null;
+            this.activeMermaidSource = null;
             this.logger.debug("renderer patch restored");
             return true;
         }
@@ -95,32 +98,77 @@ export class MermaidRendererPatch {
     private wrapRender(original: RenderFn, thisArg: MermaidLike): RenderFn {
         return (id: string, source: string, ...rest: unknown[]): Promise<unknown> => {
             const src = typeof source === "string" ? source : String(source ?? "");
+            const startedAt = Date.now();
+            const diagnostics = getMermaidSourceDiagnostics(src);
             const prepared = prepareElkSource(src, this.getSettings());
-            if (!prepared) {
-                return original
-                    .call(thisArg, id, source, ...rest)
-                    .catch((error) => {
-                        const compatibilityError = this.toBundledMermaidCompatibilityError(error, src, id);
-                        throw compatibilityError ?? error;
-                    });
+            const sourceToRender = prepared?.source ?? source;
+
+            this.logger.debug("starting Mermaid render", {
+                ...diagnostics,
+                diagramId: id,
+                provider: this.activeMermaidSource ?? "unknown",
+                routedThroughElk: Boolean(prepared),
+                sourceChanged: prepared ? prepared.source !== src : false,
+            });
+
+            if (prepared) {
+                this.logger.debug("prepared ELK source", {
+                    appliedBy: prepared.appliedBy,
+                    changedLayout: prepared.changedLayout,
+                    diagramId: id,
+                    hadExistingLayout: prepared.hadExistingLayout,
+                    markerLine: prepared.markerLine,
+                    preservedExistingLayout: prepared.preservedExistingLayout,
+                    sanitizedListLabels: prepared.sanitizedListLabels,
+                });
             }
 
-            this.logger.debug("routing diagram through ELK", {
-                appliedBy: prepared.appliedBy,
-                changedLayout: prepared.changedLayout,
-                hadExistingLayout: prepared.hadExistingLayout,
-                id,
-                hasFrontmatter: prepared.hasFrontmatter,
-                markerLine: prepared.markerLine,
-                preservedExistingLayout: prepared.preservedExistingLayout,
-                sanitizedListLabels: prepared.sanitizedListLabels,
-            });
-            return original
-                .call(thisArg, id, prepared.source, ...rest)
+            try {
+                return original
+                    .call(thisArg, id, sourceToRender, ...rest)
+                    .then((result) => {
+                        this.logger.debug("finished Mermaid render", {
+                            diagramId: id,
+                            durationMs: Date.now() - startedAt,
+                            provider: this.activeMermaidSource ?? "unknown",
+                            routedThroughElk: Boolean(prepared),
+                        });
+                        return result;
+                    })
                 .catch((error) => {
+                    this.logger.warn("Mermaid render failed", {
+                        ...diagnostics,
+                        diagramId: id,
+                        durationMs: Date.now() - startedAt,
+                        error: this.getErrorDiagnostics(error),
+                        provider: this.activeMermaidSource ?? "unknown",
+                        routedThroughElk: Boolean(prepared),
+                    });
                     const compatibilityError = this.toBundledMermaidCompatibilityError(error, src, id);
                     throw compatibilityError ?? error;
                 });
+            } catch (error) {
+                this.logger.warn("Mermaid render failed", {
+                    ...diagnostics,
+                    diagramId: id,
+                    durationMs: Date.now() - startedAt,
+                    error: this.getErrorDiagnostics(error),
+                    provider: this.activeMermaidSource ?? "unknown",
+                    routedThroughElk: Boolean(prepared),
+                });
+                const compatibilityError = this.toBundledMermaidCompatibilityError(error, src, id);
+                return Promise.reject(compatibilityError ?? this.toError(error));
+            }
+        };
+    }
+
+    private getErrorDiagnostics(error: unknown) {
+        const message = this.toErrorMessage(error);
+        return {
+            hasParseError: /parse error/i.test(message),
+            hasUnknownDiagramError: UNKNOWN_DIAGRAM_ERROR_RE.test(message),
+            kind: error instanceof Error ? error.name : typeof error,
+            messageLength: message.length,
         };
     }
 
@@ -182,10 +230,16 @@ export class MermaidRendererPatch {
         return "";
     }
 
-    private patchMarkerRouting(mermaid: MermaidLike, restoreMermaid?: MermaidLike) {
+    private toError(error: unknown): Error {
+        if (error instanceof Error) return error;
+        return new Error(this.toErrorMessage(error) || "Mermaid render failed");
+    }
+
+    private patchMarkerRouting(mermaid: MermaidLike, restoreMermaid?: MermaidLike, source?: string) {
         const win = window as Window & { mermaid?: MermaidLike };
         this.originalMermaid = mermaid;
         this.previousWindowMermaid = restoreMermaid ?? win.mermaid;
+        this.activeMermaidSource = source ?? null;
         this.markPatched(mermaid);
 
         const patchedRender = this.wrapRender(mermaid.render, mermaid);

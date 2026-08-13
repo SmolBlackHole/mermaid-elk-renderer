@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.2.1
+
+- Fixed ELK frontmatter insertion when an existing `config:` block uses non-default indentation.
+- Added safe Mermaid render diagnostics for routing, diagram type, and Gantt date metadata.
+- Migrated tests to Vitest and added Fast-check properties for frontmatter indentation and settings normalization.
+- Updated locked Mermaid dependencies to 11.16.1 and added Dependabot for npm and GitHub Actions updates.
+
 ## 1.2.0
 
 - Updated bundled Mermaid to 11.16.0 and @mermaid-js/layout-elk to 0.2.2.

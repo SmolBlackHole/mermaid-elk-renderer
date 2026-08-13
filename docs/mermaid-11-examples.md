@@ -4,7 +4,7 @@ Back to the main guide: [README](../README.md)
 
 > [!info] Prerendered showcase
 > These diagrams are prerendered for GitHub and plain Markdown viewers.
-> To see them live in Obsidian, enable **Use bundled Mermaid 11** (loads Mermaid `11.16.0`).
+> To see them live in Obsidian, enable **Use bundled Mermaid 11** (loads Mermaid `11.16.1`).
 > Official Mermaid docs: [mermaid.js.org](https://mermaid.js.org/intro/)
 >
 > Want copy-paste Markdown files? Grab them from the [examples/](../examples/) folder and open them in your vault.

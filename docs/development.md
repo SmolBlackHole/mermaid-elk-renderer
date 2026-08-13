@@ -39,7 +39,7 @@ The three files Obsidian needs:
 Two rendering paths, controlled by the **Use bundled Mermaid 11** setting:
 
 - Obsidian's built-in Mermaid (default)
-- Bundled Mermaid 11.16.0 (for newer diagram types)
+- Bundled Mermaid 11.16.1 (for newer diagram types)
 
 ## Prerendered assets
 

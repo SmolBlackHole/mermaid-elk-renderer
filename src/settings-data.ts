@@ -13,7 +13,7 @@ export interface MermaidElkRendererSettings {
     useBundledMermaid: boolean;
 }
 
-export const BUNDLED_MERMAID_VERSION = "11.16.0";
+export const BUNDLED_MERMAID_VERSION = "11.16.1";
 export const DEFAULT_QUOTED_LABEL_PATTERN = String.raw`"([^"\\]*(?:\\.[^"\\]*)*)"`;
 export const DEFAULT_BRACKET_LABEL_PATTERN = String.raw`\[([^[]\]\n]*(?:<br\s*\/?>[^[]\]\n]*)*)\]`;
 export const DEFAULT_ORDERED_LIST_MARKER_PATTERN = String.raw`(^|<br\s*\/?>)(\s*)(\d+)\.(?=\s)`;

@@ -7,7 +7,7 @@ const SRC = resolve("assets/prerendered-src");
 const OUT = resolve("assets/prerendered");
 const META = resolve("assets/prerendered-meta.json");
 const EXAMPLES_DOC = resolve("docs/mermaid-11-examples.md");
-const BUNDLED_VERSION = "11.16.0";
+const BUNDLED_VERSION = "11.16.1";
 
 function renderSvgs() {
     if (!existsSync(SRC)) {

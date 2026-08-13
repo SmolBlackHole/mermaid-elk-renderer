@@ -1,12 +1,13 @@
 {
   "name": "mermaid-elk-renderer",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Re-enables ELK layout support for Mermaid diagrams in Obsidian.",
   "main": "main.js",
   "scripts": {
     "dev": "node esbuild.config.mjs",
     "build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
-    "test": "node --import tsx --test tests/renderer.test.ts tests/settings-data.test.ts",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "lint": "eslint src/**/*.ts tests/**/*.ts",
     "lint:fix": "eslint src/**/*.ts tests/**/*.ts --fix",
     "render-svgs": "node scripts/render-svgs.mjs"
@@ -18,19 +19,20 @@
   "dependencies": {
     "@mermaid-js/layout-elk": "^0.2.2",
     "mermaid": "^11.16.0",
-    "mermaid-layout-elk-obsidian": "npm:@mermaid-js/layout-elk@0.2.0"
+    "mermaid-layout-elk-obsidian": "npm:@mermaid-js/layout-elk@^0.2.2"
   },
   "devDependencies": {
     "@mermaid-js/mermaid-cli": "^11.16.0",
-    "@types/node": "^16.18.126",
+    "@types/node": "^22.20.1",
     "@typescript-eslint/eslint-plugin": "^8.58.0",
     "@typescript-eslint/parser": "^8.58.0",
     "esbuild": "^0.28.0",
     "eslint": "^9.39.4",
     "eslint-plugin-obsidianmd": "^0.1.9",
-    "obsidian": "^1.12.3",
+    "fast-check": "^4.9.0",
+    "obsidian": "1.12.3",
     "tslib": "^2.4.0",
-    "tsx": "^4.22.3",
-    "typescript": "^6.0.2"
+    "typescript": "^6.0.2",
+    "vitest": "^4.1.10"
   }
 }

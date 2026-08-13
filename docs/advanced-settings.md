@@ -4,7 +4,7 @@ Back to the main guide: [README](../README.md)
 
 ## Bundled Mermaid 11
 
-If you enable **Use bundled Mermaid 11**, the plugin loads Mermaid 11.16.0 from the plugin instead of using Obsidian's built-in Mermaid. This matters when you hit a diagram type that is documented at [mermaid.js.org](https://mermaid.js.org/intro/) but does not render in stock Obsidian.
+If you enable **Use bundled Mermaid 11**, the plugin loads Mermaid 11.16.1 from the plugin instead of using Obsidian's built-in Mermaid. This matters when you hit a diagram type that is documented at [mermaid.js.org](https://mermaid.js.org/intro/) but does not render in stock Obsidian.
 
 > [!tip] When to turn this on
 > If a diagram from the official Mermaid docs fails in Obsidian, try the bundled runtime first.

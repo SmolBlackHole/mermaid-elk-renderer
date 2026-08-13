@@ -46,6 +46,20 @@ export type PreparedElkSource = {
     source: string;
 };
 
+export type MermaidSourceDiagnostics = {
+    characterCount: number;
+    diagramType: string | null;
+    gantt: {
+        axisFormat: string | null;
+        dateFormat: string | null;
+        hasNegativeDate: boolean;
+        todayMarker: "custom" | "default" | "off";
+    } | null;
+    hasFrontmatter: boolean;
+    hasInitDirective: boolean;
+    lineCount: number;
+};
+
 function getMarkerText(settings: MermaidElkRendererSettings): string {
     return settings.markerText.trim() || DEFAULT_SETTINGS.markerText;
 }
@@ -88,6 +102,54 @@ function buildConfigLines(settings: MermaidElkRendererSettings): string[] {
     if (configDefaults.look) lines.push(`  look: ${configDefaults.look}`);
     if (configDefaults.theme) lines.push(`  theme: ${configDefaults.theme}`);
     return lines;
+}
+
+function getDiagramType(source: string): string | null {
+    const withoutFrontmatter = source.replace(FRONTMATTER_RE, "");
+    for (const line of withoutFrontmatter.split(/\r?\n/)) {
+        const trimmed = line.trim();
+        if (!trimmed || INIT_DIRECTIVE_LINE_RE.test(trimmed) || trimmed.startsWith("%%")) continue;
+
+        return trimmed.match(/^([a-z][\w-]*)\b/i)?.[1].toLowerCase() ?? null;
+    }
+
+    return null;
+}
+
+function getGanttDirective(lines: string[], directive: string): string | null {
+    const directiveRe = new RegExp(`^\\s*${directive}\\s+(.+?)\\s*$`, "i");
+    for (const line of lines) {
+        const match = line.match(directiveRe);
+        if (match) return match[1];
+    }
+
+    return null;
+}
+
+export function getMermaidSourceDiagnostics(source: string): MermaidSourceDiagnostics {
+    const lines = source.split(/\r?\n/);
+    const diagramType = getDiagramType(source);
+    const todayMarker = getGanttDirective(lines, "todayMarker");
+
+    return {
+        characterCount: source.length,
+        diagramType,
+        gantt: diagramType === "gantt"
+            ? {
+                axisFormat: getGanttDirective(lines, "axisFormat"),
+                dateFormat: getGanttDirective(lines, "dateFormat"),
+                hasNegativeDate: lines.some((line) => line.includes(":") && /(?:^|,)\s*-\d/.test(line)),
+                todayMarker: todayMarker?.toLowerCase() === "off"
+                    ? "off"
+                    : todayMarker
+                        ? "custom"
+                        : "default",
+            }
+            : null,
+        hasFrontmatter: FRONTMATTER_RE.test(source),
+        hasInitDirective: source.includes("%%{"),
+        lineCount: source ? lines.length : 0,
+    };
 }
 
 function sanitizeMarkdownListLabels(source: string, settings: MermaidElkRendererSettings): string {
@@ -158,6 +220,7 @@ function upsertElkLayoutInFrontmatter(body: string, settings: MermaidElkRenderer
         };
     }
 
+    const configIndent = getConfigChildIndent(lines, configIndex);
     let insertIndex = configIndex + 1;
     let hasLayout = false;
     let hasLook = false;
@@ -176,7 +239,7 @@ function upsertElkLayoutInFrontmatter(body: string, settings: MermaidElkRenderer
                     changedLayout: false,
                     hadLayout: true,
                     preservedExistingLayout: true,
-                    source: insertMissingConfigDefaults(lines, insertIndex, configDefaults, hasLook, hasTheme).join("\n"),
+                    source: insertMissingConfigDefaults(lines, insertIndex, configDefaults, hasLook, hasTheme, configIndent).join("\n"),
                 };
             }
 
@@ -192,11 +255,11 @@ function upsertElkLayoutInFrontmatter(body: string, settings: MermaidElkRenderer
     }
 
     if (!hasLayout) {
-        lines.splice(insertIndex, 0, "  layout: \"elk\"");
+        lines.splice(insertIndex, 0, `${configIndent}layout: "elk"`);
         insertIndex++;
     }
 
-    const updatedLines = insertMissingConfigDefaults(lines, insertIndex, configDefaults, hasLook, hasTheme);
+    const updatedLines = insertMissingConfigDefaults(lines, insertIndex, configDefaults, hasLook, hasTheme, configIndent);
     return {
         changedLayout: replacedExistingLayout || !hasLayout,
         hadLayout: hasLayout,
@@ -205,16 +268,27 @@ function upsertElkLayoutInFrontmatter(body: string, settings: MermaidElkRenderer
     };
 }
 
+function getConfigChildIndent(lines: string[], configIndex: number): string {
+    for (let index = configIndex + 1; index < lines.length; index++) {
+        const line = lines[index];
+        if (line.trim() && !/^\s/.test(line)) break;
+        if (line.trim()) return line.match(INDENT_RE)?.[0] ?? "  ";
+    }
+
+    return "  ";
+}
+
 function insertMissingConfigDefaults(
     lines: string[],
     insertIndex: number,
     configDefaults: ConfigDefaults,
     hasLook: boolean,
     hasTheme: boolean,
+    configIndent: string,
 ): string[] {
     const additions: string[] = [];
-    if (configDefaults.look && !hasLook) additions.push(`  look: ${configDefaults.look}`);
-    if (configDefaults.theme && !hasTheme) additions.push(`  theme: ${configDefaults.theme}`);
+    if (configDefaults.look && !hasLook) additions.push(`${configIndent}look: ${configDefaults.look}`);
+    if (configDefaults.theme && !hasTheme) additions.push(`${configIndent}theme: ${configDefaults.theme}`);
     if (additions.length) lines.splice(insertIndex, 0, ...additions);
     return lines;
 }
