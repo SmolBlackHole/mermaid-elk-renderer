@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.2.2
+
+- Updated development tooling and GitHub Actions dependencies.
+- Restored the release compatibility map for 1.2.1 and added the 1.2.2 entry.
+
 ## 1.2.1
 
 - Fixed ELK frontmatter insertion when an existing `config:` block uses non-default indentation.
