@@ -92,6 +92,10 @@ export default class MermaidElkRendererPlugin extends Plugin {
         this.previewRefresher.queue("settings change");
     }
 
+    debugSettings(message: string, details?: Record<string, unknown>) {
+        this.logger.child("settings").debug(message, details);
+    }
+
     async onload() {
         await this.loadSettings();
         this.addSettingTab(new MermaidElkRendererSettingTab(this.app, this));

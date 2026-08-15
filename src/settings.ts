@@ -1,6 +1,6 @@
-import { App, Notice, PluginSettingTab, Setting } from "obsidian";
+import { App, Notice, PluginSettingTab, requireApiVersion, Setting, type SettingDefinitionItem } from "obsidian";
 import type MermaidElkRendererPlugin from "./main";
-import { BUNDLED_MERMAID_VERSION, DEFAULT_SETTINGS } from "./settings-data";
+import { BUNDLED_MERMAID_VERSION, DEFAULT_SETTINGS, type MermaidElkRendererSettings } from "./settings-data";
 
 const REPOSITORY_URL = "https://github.com/SmolBlackHole/mermaid-elk-renderer";
 const ISSUE_TRACKER_URL = "https://github.com/SmolBlackHole/mermaid-elk-renderer/issues/new/choose";
@@ -12,6 +12,206 @@ export class MermaidElkRendererSettingTab extends PluginSettingTab {
     constructor(app: App, plugin: MermaidElkRendererPlugin) {
         super(app, plugin);
         this.plugin = plugin;
+    }
+
+    getSettingDefinitions(): SettingDefinitionItem[] {
+        this.plugin.debugSettings("rendering declarative settings");
+        return [
+            {
+                type: "group",
+                heading: "Basics",
+                items: [
+                    {
+                        name: "Debug logging",
+                        desc: "Log plugin startup, renderer patching, and elk routing decisions to the developer console.",
+                        control: { type: "toggle", key: "debugLogging" },
+                    },
+                    {
+                        name: "Escape numbered labels",
+                        desc: "Prevent labels like '1. Step' from being interpreted as Markdown lists by Mermaid.",
+                        control: { type: "toggle", key: "escapeOrderedListLabels" },
+                    },
+                ],
+            },
+            {
+                type: "group",
+                heading: "Routing",
+                items: [
+                    {
+                        name: "Marker text",
+                        desc: "Text used inside the Mermaid comment marker. The default marker is %% elk %%.",
+                        control: { type: "text", key: "markerText", placeholder: DEFAULT_SETTINGS.markerText },
+                    },
+                    {
+                        name: "Apply elk to all diagrams",
+                        desc: "Route every Mermaid diagram through elk, even when the marker is not present.",
+                        control: { type: "toggle", key: "applyElkToAllDiagrams" },
+                    },
+                    {
+                        name: "Override existing layout",
+                        desc: "Replace an existing Mermaid layout value with elk when a diagram is routed through this plugin.",
+                        control: { type: "toggle", key: "overrideExistingLayout" },
+                    },
+                ],
+            },
+            {
+                type: "group",
+                heading: "Styling",
+                items: [
+                    {
+                        name: "Default Mermaid look",
+                        desc: "Optional default look for routed diagrams. Existing diagram config wins if present.",
+                        control: {
+                            type: "dropdown",
+                            key: "defaultMermaidLook",
+                            options: {
+                                "": "Preserve existing",
+                                classic: "Classic",
+                                handDrawn: "Hand drawn",
+                            },
+                        },
+                    },
+                    {
+                        name: "Default Mermaid theme",
+                        desc: "Optional default theme for routed diagrams. Existing frontmatter still takes priority.",
+                        control: {
+                            type: "dropdown",
+                            key: "defaultMermaidTheme",
+                            options: {
+                                "": "Preserve existing",
+                                default: "Default",
+                                neutral: "Neutral",
+                                dark: "Dark",
+                                forest: "Forest",
+                                base: "Base",
+                            },
+                        },
+                    },
+                ],
+            },
+            {
+                type: "group",
+                heading: "Experimental",
+                items: [
+                    {
+                        name: `Use bundled Mermaid ${BUNDLED_MERMAID_VERSION} to load a newer Mermaid version`,
+                        desc: "This option makes the plugin load the newer Mermaid runtime from the plugin itself instead of Obsidian's older bundled Mermaid. Use it when examples from the official Mermaid docs do not work in plain Obsidian yet.",
+                    },
+                    {
+                        name: "Use bundled Mermaid 11",
+                        desc: `Load Mermaid ${BUNDLED_MERMAID_VERSION} from this plugin instead of Obsidian's bundled Mermaid. This is the option to enable for newer Mermaid docs examples.`,
+                        control: { type: "toggle", key: "useBundledMermaid" },
+                    },
+                    {
+                        name: "Official Mermaid docs",
+                        desc: "Open the Mermaid documentation for newer diagram types, syntax, and examples.",
+                        render: (setting) => {
+                            setting.addButton((button) =>
+                                button
+                                    .setButtonText("Open Mermaid docs")
+                                    .onClick(() => window.open(MERMAID_DOCS_URL, "_blank", "noopener,noreferrer"))
+                            );
+                        },
+                    },
+                ],
+            },
+            {
+                type: "group",
+                heading: "Support",
+                items: [
+                    {
+                        name: "GitHub repository",
+                        desc: "View source code, releases, and documentation.",
+                        render: (setting) => {
+                            setting.addButton((button) =>
+                                button
+                                    .setButtonText("Open repository")
+                                    .onClick(() => window.open(REPOSITORY_URL, "_blank", "noopener,noreferrer"))
+                            );
+                        },
+                    },
+                    {
+                        name: "Report an issue",
+                        desc: "Found a bug or have a request? Please open an issue in the repository.",
+                        render: (setting) => {
+                            setting.addButton((button) =>
+                                button
+                                    .setButtonText("Open issue tracker")
+                                    .setCta()
+                                    .onClick(() => window.open(ISSUE_TRACKER_URL, "_blank", "noopener,noreferrer"))
+                            );
+                        },
+                    },
+                    {
+                        name: "Copy debug report",
+                        desc: "Copies current plugin settings and recent logs for pasting into an issue.",
+                        render: (setting) => {
+                            setting.addButton((button) =>
+                                button
+                                    .setButtonText("Copy report")
+                                    .onClick(() => void this.plugin.copyDebugReportToClipboard())
+                            );
+                        },
+                    },
+                    {
+                        name: "Reset settings",
+                        desc: "Restore all plugin options to their defaults.",
+                        render: (setting) => {
+                            setting.addButton((button) =>
+                                button
+                                    .setButtonText("Reset")
+                                    .onClick(() => void this.resetSettings())
+                            );
+                        },
+                    },
+                ],
+            },
+            {
+                type: "group",
+                heading: "Danger zone",
+                cls: "mermaid-elk-danger-zone",
+                items: [
+                    {
+                        name: "Do not touch unless you know what you're doing",
+                        desc: "Regex overrides live here. If everything already works, this section is mostly a trap with form controls.",
+                    },
+                    {
+                        name: "Ordered label regex",
+                        desc: "Regex used to detect numbered list markers inside labels.",
+                        control: { type: "textarea", key: "orderedListMarkerPattern", placeholder: DEFAULT_SETTINGS.orderedListMarkerPattern },
+                    },
+                    {
+                        name: "Ordered label replacement",
+                        desc: "Replacement used for detected numbered labels.",
+                        control: { type: "text", key: "orderedListReplacement", placeholder: DEFAULT_SETTINGS.orderedListReplacement },
+                    },
+                    {
+                        name: "Quoted label regex",
+                        desc: "Regex used to find quoted Mermaid labels before replacements are applied.",
+                        control: { type: "textarea", key: "quotedLabelPattern", placeholder: DEFAULT_SETTINGS.quotedLabelPattern },
+                    },
+                    {
+                        name: "Bracket label regex",
+                        desc: "Regex used to find bracket-style Mermaid labels before replacements are applied.",
+                        control: { type: "textarea", key: "bracketLabelPattern", placeholder: DEFAULT_SETTINGS.bracketLabelPattern },
+                    },
+                ],
+            },
+        ];
+    }
+
+    async setControlValue(key: string, value: unknown): Promise<void> {
+        const settings = this.plugin.settings as unknown as Record<keyof MermaidElkRendererSettings, unknown>;
+        settings[key as keyof MermaidElkRendererSettings] = value;
+        await this.plugin.saveSettings();
+        this.plugin.debugSettings("saved declarative setting", { key });
+    }
+
+    private async resetSettings(): Promise<void> {
+        this.plugin.settings = { ...DEFAULT_SETTINGS };
+        await this.plugin.saveSettings();
+        this.plugin.debugSettings("reset declarative settings");
+        if (requireApiVersion("1.13.0")) this.update();
     }
 
     display(): void {

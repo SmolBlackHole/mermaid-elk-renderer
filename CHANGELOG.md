@@ -3,6 +3,7 @@
 ## 1.2.2
 
 - Updated development tooling and GitHub Actions dependencies.
+- Added declarative settings for Obsidian 1.13+ while retaining the existing settings UI for older Obsidian versions.
 - Restored the release compatibility map for 1.2.1 and added the 1.2.2 entry.
 
 ## 1.2.1
