@@ -32,4 +32,10 @@ export default defineConfig([
             "import/no-nodejs-modules": "off",
         },
     },
+    {
+        files: ["src/logger.ts"],
+        rules: {
+            "obsidianmd/rule-custom-message": "off",
+        },
+    },
 ]);
