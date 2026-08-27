@@ -33,6 +33,6 @@
     "obsidian": "1.13.1",
     "tslib": "^2.4.0",
     "typescript": "^6.0.2",
-    "vitest": "^4.1.10"
+    "vitest": "^4.1.11"
   }
 }
