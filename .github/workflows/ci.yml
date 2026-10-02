@@ -1,0 +1,29 @@
+name: Validate plugin
+
+on:
+    pull_request:
+        branches: [dev, master]
+    push:
+        branches: [dev, master]
+
+permissions:
+    contents: read
+
+jobs:
+    validate:
+        runs-on: ubuntu-latest
+        env:
+            PUPPETEER_SKIP_DOWNLOAD: "true"
+        steps:
+            - uses: actions/checkout@v7
+
+            - uses: actions/setup-node@v7
+              with:
+                  node-version: "22.x"
+                  cache: npm
+
+            - run: npm ci
+            - run: npm audit
+            - run: npm test
+            - run: npm run lint -- --max-warnings=0
+            - run: npm run build

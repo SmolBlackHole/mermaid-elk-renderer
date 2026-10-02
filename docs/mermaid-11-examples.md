@@ -4,7 +4,7 @@ Back to the main guide: [README](../README.md)
 
 > [!info] Prerendered showcase
 > These diagrams are prerendered for GitHub and plain Markdown viewers.
-> To see them live in Obsidian, enable **Use bundled Mermaid 11** (loads Mermaid `11.16.1`).
+> To see them live in Obsidian, enable **Use bundled Mermaid 11** (loads Mermaid `11.17.0`).
 > Official Mermaid docs: [mermaid.js.org](https://mermaid.js.org/intro/)
 >
 > Want copy-paste Markdown files? Grab them from the [examples/](../examples/) folder and open them in your vault.
@@ -99,7 +99,6 @@ treemap-beta
 <!-- markdownlint-disable MD033 -->
 <details>
 <summary>UDP packet layout showing port, length, checksum, and data fields.</summary>
-
 
 ![Prerendered Packet diagram](../assets/prerendered/showcase-packet.svg)
 
@@ -278,7 +277,6 @@ railroad-peg-beta
 <!-- markdownlint-disable MD033 -->
 <details>
 <summary>Project time distribution with showData labels. New in Mermaid 11.16.</summary>
-
 
 ![Prerendered Pie chart](../assets/prerendered/showcase-pie.svg)
 

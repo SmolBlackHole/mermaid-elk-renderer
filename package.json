@@ -1,6 +1,6 @@
 {
   "name": "mermaid-elk-renderer",
-  "version": "1.2.2",
+  "version": "1.2.3",
   "description": "Re-enables ELK layout support for Mermaid diagrams in Obsidian.",
   "main": "main.js",
   "scripts": {
@@ -20,6 +20,11 @@
     "@mermaid-js/layout-elk": "^0.2.2",
     "mermaid": "^11.17.0",
     "mermaid-layout-elk-obsidian": "npm:@mermaid-js/layout-elk@^0.2.2"
+  },
+  "overrides": {
+    "obsidian": {
+      "moment": "^2.31.0"
+    }
   },
   "devDependencies": {
     "@mermaid-js/mermaid-cli": "^11.16.0",

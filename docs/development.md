@@ -4,7 +4,7 @@ Back to the main guide: [README](../README.md)
 
 ## Project structure
 
-```
+```txt
 src/
   main.ts              plugin lifecycle, settings, debug reports
   settings.ts          Obsidian settings tab UI
@@ -39,7 +39,18 @@ The three files Obsidian needs:
 Two rendering paths, controlled by the **Use bundled Mermaid 11** setting:
 
 - Obsidian's built-in Mermaid (default)
-- Bundled Mermaid 11.16.1 (for newer diagram types)
+- Bundled Mermaid 11.17.0 (for newer diagram types)
+
+## Dependency updates
+
+Dependabot targets `dev`. Pull requests and branch pushes run installation,
+security auditing, tests, linting, and the production build before release work.
+TypeScript 7 is not yet compatible with the current ESLint parser and compiler
+configuration; keep TypeScript 6 until a separate migration is validated.
+
+The Obsidian SDK pins an older Moment release. The scoped `moment` override in
+`package.json` updates this development-only dependency for security fixes; it
+does not replace the Moment runtime provided by Obsidian.
 
 ## Prerendered assets
 

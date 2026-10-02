@@ -7,127 +7,133 @@ const SRC = resolve("assets/prerendered-src");
 const OUT = resolve("assets/prerendered");
 const META = resolve("assets/prerendered-meta.json");
 const EXAMPLES_DOC = resolve("docs/mermaid-11-examples.md");
-const BUNDLED_VERSION = "11.16.1";
+const BUNDLED_VERSION = JSON.parse(readFileSync(resolve("package-lock.json"), "utf-8")).packages[
+	"node_modules/mermaid"
+].version;
 
 function renderSvgs() {
-    if (!existsSync(SRC)) {
-        process.stderr.write(`Source dir not found: ${SRC}\n`);
-        process.exit(1);
-    }
+	if (!existsSync(SRC)) {
+		process.stderr.write(`Source dir not found: ${SRC}\n`);
+		process.exit(1);
+	}
 
-    mkdirSync(OUT, { recursive: true });
+	mkdirSync(OUT, { recursive: true });
 
-    const files = readdirSync(SRC).filter((f) => extname(f) === ".mmd");
-    if (!files.length) {
-        process.stdout.write("No .mmd files found.\n");
-        return 0;
-    }
+	const files = readdirSync(SRC).filter((f) => extname(f) === ".mmd");
+	if (!files.length) {
+		process.stdout.write("No .mmd files found.\n");
+		return 0;
+	}
 
-    let ok = 0;
-    for (const file of files) {
-        const input = join(SRC, file);
-        const output = join(OUT, file.replace(/\.mmd$/, ".svg"));
-        try {
-            execSync(`npx mmdc -i "${input}" -o "${output}" -b transparent`, { stdio: "pipe" });
-            ok++;
-        } catch (err) {
-            process.stderr.write(`Failed: ${file} — ${err.stderr?.toString().trim() || err.message}\n`);
-        }
-    }
+	let ok = 0;
+	for (const file of files) {
+		const input = join(SRC, file);
+		const output = join(OUT, file.replace(/\.mmd$/, ".svg"));
+		try {
+			execSync(`npx mmdc -i "${input}" -o "${output}" -b transparent`, {
+				stdio: "pipe",
+			});
+			ok++;
+		} catch (err) {
+			process.stderr.write(
+				`Failed: ${file} — ${err.stderr?.toString().trim() || err.message}\n`,
+			);
+		}
+	}
 
-    process.stdout.write(`Rendered ${ok}/${files.length} SVGs.\n`);
-    return ok;
+	process.stdout.write(`Rendered ${ok}/${files.length} SVGs.\n`);
+	return ok;
 }
 
 function readSource(id) {
-    const path = join(SRC, `${id}.mmd`);
-    if (!existsSync(path)) return null;
-    return readFileSync(path, "utf-8").trim();
+	const path = join(SRC, `${id}.mmd`);
+	if (!existsSync(path)) return null;
+	return readFileSync(path, "utf-8").trim();
 }
 
 function generateExamplesDoc(meta) {
-    const showcase = meta.showcase || [];
-    if (!showcase.length) {
-        process.stderr.write("No showcase entries in metadata.\n");
-        return false;
-    }
+	const showcase = meta.showcase || [];
+	if (!showcase.length) {
+		process.stderr.write("No showcase entries in metadata.\n");
+		return false;
+	}
 
-    const items = showcase
-        .map((item) => {
-            const source = readSource(item.id);
-            if (!source) {
-                process.stderr.write(`Source not found for ${item.id}\n`);
-                return null;
-            }
+	const items = showcase
+		.map((item) => {
+			const source = readSource(item.id);
+			if (!source) {
+				process.stderr.write(`Source not found for ${item.id}\n`);
+				return null;
+			}
 
-            const needsBundled = item.needsBundledMermaid
-                ? "\n> [!important] Bundled Mermaid required\n> This diagram type needs **Use bundled Mermaid 11** enabled."
-                : "";
+			const needsBundled = item.needsBundledMermaid
+				? "\n> [!important] Bundled Mermaid required\n> This diagram type needs **Use bundled Mermaid 11** enabled."
+				: "";
 
-            return [
-                `## ${item.title}`,
-                "",
-                `<!-- markdownlint-disable MD033 -->`,
-                `<details>`,
-                `<summary>${item.description}</summary>`,
-                needsBundled,
-                "",
-                `![Prerendered ${item.title}](../assets/prerendered/${item.id}.svg)`,
-                "",
-                `\`\`\`\`markdown`,
-                `\`\`\`mermaid`,
-                source,
-                `\`\`\``,
-                `\`\`\`\``,
-                "",
-                `</details>`,
-                `<!-- markdownlint-enable MD033 -->`,
-                "",
-            ].join("\n");
-        })
-        .filter(Boolean);
+			return [
+				`## ${item.title}`,
+				"",
+				`<!-- markdownlint-disable MD033 -->`,
+				`<details>`,
+				`<summary>${item.description}</summary>`,
+				needsBundled,
+				"",
+				`![Prerendered ${item.title}](../assets/prerendered/${item.id}.svg)`,
+				"",
+				`\`\`\`\`markdown`,
+				`\`\`\`mermaid`,
+				source,
+				`\`\`\``,
+				`\`\`\`\``,
+				"",
+				`</details>`,
+				`<!-- markdownlint-enable MD033 -->`,
+				"",
+			].join("\n");
+		})
+		.filter(Boolean);
 
-    const header = [
-        "# Mermaid 11 example renders",
-        "",
-        "Back to the main guide: [README](../README.md)",
-        "",
-        "> [!info] Prerendered showcase",
-        "> These diagrams are prerendered for GitHub and plain Markdown viewers.",
-        `> To see them live in Obsidian, enable **Use bundled Mermaid 11** (loads Mermaid \`${BUNDLED_VERSION}\`).`,
-        "> Official Mermaid docs: [mermaid.js.org](https://mermaid.js.org/intro/)",
-        ">",
-        "> Want copy-paste Markdown files? Grab them from the [examples/](../examples/) folder and open them in your vault.",
-        "",
-    ].join("\n");
+	const header = [
+		"# Mermaid 11 example renders",
+		"",
+		"Back to the main guide: [README](../README.md)",
+		"",
+		"> [!info] Prerendered showcase",
+		"> These diagrams are prerendered for GitHub and plain Markdown viewers.",
+		`> To see them live in Obsidian, enable **Use bundled Mermaid 11** (loads Mermaid \`${BUNDLED_VERSION}\`).`,
+		"> Official Mermaid docs: [mermaid.js.org](https://mermaid.js.org/intro/)",
+		">",
+		"> Want copy-paste Markdown files? Grab them from the [examples/](../examples/) folder and open them in your vault.",
+		"",
+	].join("\n");
 
-    const footer = [
-        "## Notes",
-        "",
-        "- Images are prerendered for portability. GitHub shows them even when it cannot run the plugin's Mermaid path.",
-        "- Source snippets come from `assets/prerendered-src/` and are rendered via `npm run render-svgs`.",
-        "- Newer diagram types need the bundled Mermaid runtime.",
-        "- Copy the Markdown files from [examples/](../examples/) into your vault to test live with the plugin.",
-        "",
-    ].join("\n");
+	const footer = [
+		"## Notes",
+		"",
+		"- Images are prerendered for portability. GitHub shows them even when it cannot run the plugin's Mermaid path.",
+		"- Source snippets come from `assets/prerendered-src/` and are rendered via `npm run render-svgs`.",
+		"- Newer diagram types need the bundled Mermaid runtime.",
+		"- Copy the Markdown files from [examples/](../examples/) into your vault to test live with the plugin.",
+		"",
+	].join("\n");
 
-    const content = header + "\n" + items.join("\n") + footer;
-    writeFileSync(EXAMPLES_DOC, content, "utf-8");
-    process.stdout.write(`Generated ${EXAMPLES_DOC}\n`);
-    return true;
+	const content = header + "\n" + items.join("\n") + footer;
+	writeFileSync(EXAMPLES_DOC, content, "utf-8");
+	process.stdout.write(`Generated ${EXAMPLES_DOC}\n`);
+	return true;
 }
 
 // Main
 if (!existsSync(META)) {
-    process.stderr.write(`Metadata file not found: ${META}\n`);
-    process.exit(1);
+	process.stderr.write(`Metadata file not found: ${META}\n`);
+	process.exit(1);
 }
 
 const meta = JSON.parse(readFileSync(META, "utf-8"));
 
 const rendered = renderSvgs();
 if (rendered > 0) {
-    generateExamplesDoc(meta);
+	generateExamplesDoc(meta);
 }
 
 process.stdout.write("Done.\n");

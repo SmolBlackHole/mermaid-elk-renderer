@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.2.3
+
+- Updated bundled Mermaid to 11.17.0 and refreshed security fixes in locked dependencies.
+- Updated ESLint and Vitest while retaining TypeScript 6 and ELK 0.2.2.
+- Removed unused renderer styles and deprecated settings calls without dropping the legacy settings UI.
+- Added pull request validation, a contributing guide, and Dependabot updates targeting `dev`.
+- Added regression coverage for settings compatibility, debug logging, and release metadata.
+- Added the standalone negative-year Gantt converter and shared EditorConfig settings.
+
 ## 1.2.2
 
 - Updated development tooling and GitHub Actions dependencies.

@@ -157,11 +157,11 @@ export class MermaidElkRendererSettingTab extends PluginSettingTab {
                         name: "Reset settings",
                         desc: "Restore all plugin options to their defaults.",
                         render: (setting) => {
-                            setting.addButton((button) =>
-                                button
-                                    .setButtonText("Reset")
-                                    .onClick(() => void this.resetSettings())
-                            );
+                            setting.addButton((button) => {
+                                button.setButtonText("Reset");
+                                if (requireApiVersion("1.13.0")) button.setDestructive();
+                                button.onClick(() => this.resetSettings());
+                            });
                         },
                     },
                 ],
@@ -215,6 +215,10 @@ export class MermaidElkRendererSettingTab extends PluginSettingTab {
     }
 
     display(): void {
+        this.renderLegacySettings();
+    }
+
+    private renderLegacySettings(): void {
         const { containerEl } = this;
         containerEl.empty();
 
@@ -405,12 +409,12 @@ export class MermaidElkRendererSettingTab extends PluginSettingTab {
             .addButton((button) =>
                 button
                     .setButtonText("Reset")
-                    .setWarning()
+                    .setClass("mod-warning")
                     .onClick(async () => {
                         this.plugin.settings = { ...DEFAULT_SETTINGS };
                         await this.plugin.saveSettings();
                         new Notice("Settings reset.");
-                        this.display();
+                        this.renderLegacySettings();
                     })
             );
 

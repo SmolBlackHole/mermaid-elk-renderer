@@ -1,0 +1,599 @@
+# SPDX-FileCopyrightText: 2026 SmolBlackHole
+#
+# SPDX-License-Identifier: MPL-2.0
+
+root = true
+
+
+# ==============================================================================
+# Global defaults
+# ==============================================================================
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+indent_style = space
+indent_size = 4
+
+# Not part of the EditorConfig core specification.
+# Supported by Prettier and various editors/tools.
+max_line_length = 100
+
+
+# ==============================================================================
+# JavaScript / TypeScript / Web
+# ==============================================================================
+
+[*.{js,jsx,mjs,cjs,ts,tsx,mts,cts}]
+indent_style = tab
+indent_size = 4
+tab_width = 4
+
+[*.{vue,svelte,astro}]
+indent_style = tab
+indent_size = 4
+tab_width = 4
+
+[*.{css,scss,sass,less,styl}]
+indent_style = tab
+indent_size = 4
+tab_width = 4
+
+
+# ==============================================================================
+# JSON
+# ==============================================================================
+
+[*.{json,jsonc,json5}]
+indent_style = tab
+indent_size = 4
+tab_width = 4
+
+
+# ==============================================================================
+# HTML / Templates
+# ==============================================================================
+
+[*.{html,htm}]
+indent_style = space
+indent_size = 4
+
+[*.{hbs,handlebars,mustache,njk,jinja,jinja2,twig,pug}]
+indent_style = space
+indent_size = 4
+
+
+# ==============================================================================
+# Markdown / Documentation
+# ==============================================================================
+
+[*.{md,markdown,mdx}]
+indent_style = space
+indent_size = 4
+
+# Two trailing spaces can be meaningful in Markdown.
+trim_trailing_whitespace = false
+
+[*.{rst,adoc,asciidoc}]
+indent_style = space
+indent_size = 4
+
+
+# ==============================================================================
+# YAML
+# ==============================================================================
+
+[*.{yml,yaml}]
+indent_style = space
+indent_size = 4
+
+
+# ==============================================================================
+# TOML / INI / properties
+# ==============================================================================
+
+[*.toml]
+indent_style = space
+indent_size = 4
+
+[*.{ini,cfg,conf,properties}]
+indent_style = space
+indent_size = 4
+
+
+# ==============================================================================
+# XML
+# ==============================================================================
+
+[*.{xml,xsd,xsl,xslt,svg,plist,csproj,fsproj,vbproj,props,targets}]
+indent_style = space
+indent_size = 4
+
+
+# ==============================================================================
+# Python
+# ==============================================================================
+
+[*.{py,pyi,pyw}]
+indent_style = space
+indent_size = 4
+
+
+# ==============================================================================
+# C / C++
+# ==============================================================================
+
+[*.{c,h,cc,cpp,cxx,c++,hh,hpp,hxx,h++,ipp,inl,ixx,cppm}]
+indent_style = tab
+indent_size = 4
+tab_width = 4
+
+
+# ==============================================================================
+# C#
+# ==============================================================================
+
+[*.cs]
+indent_style = space
+indent_size = 4
+
+# ------------------------------------------------------------------------------
+# .NET imports / namespaces
+# ------------------------------------------------------------------------------
+
+dotnet_sort_system_directives_first = true
+dotnet_separate_import_directive_groups = false
+
+csharp_using_directive_placement = outside_namespace:suggestion
+csharp_style_namespace_declarations = file_scoped:suggestion
+dotnet_style_namespace_match_folder = true:suggestion
+
+# ------------------------------------------------------------------------------
+# Built-in types / var
+# ------------------------------------------------------------------------------
+
+dotnet_style_predefined_type_for_locals_parameters_members = true:suggestion
+dotnet_style_predefined_type_for_member_access = true:suggestion
+
+csharp_style_var_for_built_in_types = false:suggestion
+csharp_style_var_when_type_is_apparent = true:suggestion
+csharp_style_var_elsewhere = false:suggestion
+
+# ------------------------------------------------------------------------------
+# Qualification
+# ------------------------------------------------------------------------------
+
+dotnet_style_qualification_for_field = false:suggestion
+dotnet_style_qualification_for_property = false:suggestion
+dotnet_style_qualification_for_method = false:suggestion
+dotnet_style_qualification_for_event = false:suggestion
+
+# ------------------------------------------------------------------------------
+# General .NET style
+# ------------------------------------------------------------------------------
+
+dotnet_style_require_accessibility_modifiers = for_non_interface_members:suggestion
+dotnet_style_readonly_field = true:suggestion
+
+dotnet_style_object_initializer = true:suggestion
+dotnet_style_collection_initializer = true:suggestion
+
+dotnet_style_coalesce_expression = true:suggestion
+dotnet_style_null_propagation = true:suggestion
+
+dotnet_style_explicit_tuple_names = true:suggestion
+dotnet_style_prefer_auto_properties = true:suggestion
+dotnet_style_prefer_is_null_check_over_reference_equality_method = true:suggestion
+
+# ------------------------------------------------------------------------------
+# C# language style
+# ------------------------------------------------------------------------------
+
+csharp_prefer_braces = true:suggestion
+
+csharp_style_prefer_switch_expression = true:suggestion
+csharp_style_prefer_pattern_matching = true:suggestion
+csharp_style_prefer_not_pattern = true:suggestion
+csharp_style_prefer_extended_property_pattern = true:suggestion
+
+csharp_style_prefer_simple_using_statement = true:suggestion
+
+# Expression-bodied members only when they stay compact.
+csharp_style_expression_bodied_methods = when_on_single_line:suggestion
+csharp_style_expression_bodied_constructors = false:suggestion
+csharp_style_expression_bodied_operators = when_on_single_line:suggestion
+csharp_style_expression_bodied_properties = when_on_single_line:suggestion
+csharp_style_expression_bodied_indexers = when_on_single_line:suggestion
+csharp_style_expression_bodied_accessors = when_on_single_line:suggestion
+
+# ------------------------------------------------------------------------------
+# C# braces / newlines
+# ------------------------------------------------------------------------------
+
+csharp_new_line_before_open_brace = all
+csharp_new_line_before_else = true
+csharp_new_line_before_catch = true
+csharp_new_line_before_finally = true
+
+csharp_new_line_before_members_in_object_initializers = true
+csharp_new_line_before_members_in_anonymous_types = true
+
+# ------------------------------------------------------------------------------
+# C# indentation
+# ------------------------------------------------------------------------------
+
+csharp_indent_block_contents = true
+csharp_indent_braces = false
+csharp_indent_case_contents = true
+csharp_indent_case_contents_when_block = true
+csharp_indent_switch_labels = true
+csharp_indent_labels = one_less_than_current
+
+# ------------------------------------------------------------------------------
+# C# whitespace
+# ------------------------------------------------------------------------------
+
+csharp_space_after_cast = false
+csharp_space_after_colon_in_inheritance_clause = true
+csharp_space_after_comma = true
+csharp_space_after_dot = false
+csharp_space_after_keywords_in_control_flow_statements = true
+csharp_space_after_semicolon_in_for_statement = true
+
+csharp_space_around_binary_operators = before_and_after
+csharp_space_around_declaration_statements = false
+
+csharp_space_before_colon_in_inheritance_clause = true
+csharp_space_before_comma = false
+csharp_space_before_dot = false
+csharp_space_before_open_square_brackets = false
+csharp_space_before_semicolon_in_for_statement = false
+
+csharp_space_between_empty_square_brackets = false
+csharp_space_between_method_call_empty_parameter_list_parentheses = false
+csharp_space_between_method_call_name_and_opening_parenthesis = false
+csharp_space_between_method_call_parameter_list_parentheses = false
+csharp_space_between_method_declaration_empty_parameter_list_parentheses = false
+csharp_space_between_method_declaration_name_and_open_parenthesis = false
+csharp_space_between_method_declaration_parameter_list_parentheses = false
+csharp_space_between_parentheses = false
+csharp_space_between_square_brackets = false
+
+# ------------------------------------------------------------------------------
+# C# single-line constructs
+# ------------------------------------------------------------------------------
+
+csharp_preserve_single_line_blocks = true
+csharp_preserve_single_line_statements = false
+
+
+# ==============================================================================
+# Visual Basic / F#
+# ==============================================================================
+
+[*.{vb,vbx,fs,fsi,fsx}]
+indent_style = space
+indent_size = 4
+
+
+# ==============================================================================
+# Java / JVM
+# ==============================================================================
+
+[*.{java,kt,kts,groovy,gradle,scala,sc}]
+indent_style = space
+indent_size = 4
+
+
+# ==============================================================================
+# Go
+# ==============================================================================
+
+[*.go]
+indent_style = tab
+indent_size = tab
+tab_width = 8
+
+
+# ==============================================================================
+# Rust
+# ==============================================================================
+
+[*.rs]
+indent_style = space
+indent_size = 4
+
+
+# ==============================================================================
+# PHP
+# ==============================================================================
+
+[*.php]
+indent_style = space
+indent_size = 4
+
+
+# ==============================================================================
+# Ruby
+# ==============================================================================
+
+[*.{rb,rake,gemspec}]
+indent_style = space
+indent_size = 2
+
+
+# ==============================================================================
+# Shell
+# ==============================================================================
+
+[*.{sh,bash,zsh,ksh}]
+indent_style = space
+indent_size = 4
+
+
+# ==============================================================================
+# PowerShell
+# ==============================================================================
+
+[*.{ps1,psm1,psd1}]
+indent_style = space
+indent_size = 4
+
+
+# ==============================================================================
+# Windows batch
+# ==============================================================================
+
+[*.{bat,cmd}]
+indent_style = space
+indent_size = 4
+end_of_line = crlf
+
+
+# ==============================================================================
+# Swift / Objective-C
+# ==============================================================================
+
+[*.swift]
+indent_style = space
+indent_size = 4
+
+[*.{m,mm}]
+indent_style = space
+indent_size = 4
+
+
+# ==============================================================================
+# Dart / Flutter
+# ==============================================================================
+
+[*.dart]
+indent_style = space
+indent_size = 2
+
+
+# ==============================================================================
+# Lua
+# ==============================================================================
+
+[*.lua]
+indent_style = space
+indent_size = 4
+
+
+# ==============================================================================
+# R
+# ==============================================================================
+
+[*.{r,R,rmd,Rmd}]
+indent_style = space
+indent_size = 2
+
+
+# ==============================================================================
+# SQL
+# ==============================================================================
+
+[*.{sql,psql,ddl,dml}]
+indent_style = space
+indent_size = 4
+
+
+# ==============================================================================
+# GraphQL
+# ==============================================================================
+
+[*.{graphql,gql}]
+indent_style = space
+indent_size = 2
+
+
+# ==============================================================================
+# Protocol Buffers
+# ==============================================================================
+
+[*.proto]
+indent_style = space
+indent_size = 2
+
+
+# ==============================================================================
+# Terraform / HCL
+# ==============================================================================
+
+[*.{tf,tfvars,hcl}]
+indent_style = space
+indent_size = 2
+
+
+# ==============================================================================
+# Nix
+# ==============================================================================
+
+[*.nix]
+indent_style = space
+indent_size = 2
+
+
+# ==============================================================================
+# Elixir
+# ==============================================================================
+
+[*.{ex,exs}]
+indent_style = space
+indent_size = 2
+
+
+# ==============================================================================
+# Erlang
+# ==============================================================================
+
+[*.{erl,hrl}]
+indent_style = space
+indent_size = 4
+
+
+# ==============================================================================
+# Haskell
+# ==============================================================================
+
+[*.{hs,lhs}]
+indent_style = space
+indent_size = 4
+
+
+# ==============================================================================
+# OCaml
+# ==============================================================================
+
+[*.{ml,mli}]
+indent_style = space
+indent_size = 2
+
+
+# ==============================================================================
+# Zig
+# ==============================================================================
+
+[*.zig]
+indent_style = space
+indent_size = 4
+
+
+# ==============================================================================
+# Solidity
+# ==============================================================================
+
+[*.sol]
+indent_style = space
+indent_size = 4
+
+
+# ==============================================================================
+# Prisma
+# ==============================================================================
+
+[*.prisma]
+indent_style = space
+indent_size = 2
+
+
+# ==============================================================================
+# CMake / Meson
+# ==============================================================================
+
+[*.cmake]
+indent_style = space
+indent_size = 4
+
+[CMakeLists.txt]
+indent_style = space
+indent_size = 4
+
+[meson.build]
+indent_style = space
+indent_size = 4
+
+[meson_options.txt]
+indent_style = space
+indent_size = 4
+
+
+# ==============================================================================
+# Bazel / Starlark
+# ==============================================================================
+
+[*.bzl]
+indent_style = space
+indent_size = 4
+
+[{BUILD,BUILD.bazel,WORKSPACE,WORKSPACE.bazel,MODULE.bazel}]
+indent_style = space
+indent_size = 4
+
+
+# ==============================================================================
+# Make
+# ==============================================================================
+
+[{Makefile,GNUmakefile,makefile}]
+indent_style = tab
+indent_size = tab
+tab_width = 4
+
+[*.mk]
+indent_style = tab
+indent_size = tab
+tab_width = 4
+
+
+# ==============================================================================
+# Docker
+# ==============================================================================
+
+[{Dockerfile,Containerfile}]
+indent_style = space
+indent_size = 4
+
+[*.dockerfile]
+indent_style = space
+indent_size = 4
+
+
+# ==============================================================================
+# LaTeX
+# ==============================================================================
+
+[*.{tex,sty,cls,bib}]
+indent_style = space
+indent_size = 4
+
+
+# ==============================================================================
+# Diffs / patches
+# ==============================================================================
+
+[*.{diff,patch}]
+trim_trailing_whitespace = false
+
+
+# ==============================================================================
+# Generated / minified files
+# ==============================================================================
+
+[*.min.{js,css}]
+indent_style = unset
+indent_size = unset
+tab_width = unset
+trim_trailing_whitespace = unset
+insert_final_newline = unset
+
+[*.map]
+indent_style = unset
+indent_size = unset
+tab_width = unset
+trim_trailing_whitespace = unset
+insert_final_newline = unset
