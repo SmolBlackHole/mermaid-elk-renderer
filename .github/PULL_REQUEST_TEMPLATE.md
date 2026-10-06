@@ -1,5 +1,16 @@
 <!-- Target dev. Keep the PR focused and remove sections that do not apply.
-Keep the AI assistance and ownership section for every PR. -->
+Keep the contribution scope and AI assistance and ownership sections for every PR. -->
+
+## Contribution scope
+
+Fixes to the plugin itself and dependency updates are welcome. Fixes for bugs in
+Mermaid itself belong upstream. PRs that patch Mermaid or add new plugin-side
+workarounds for its bugs will be rejected, even if the workaround works.
+Maintaining existing workarounds needed for the plugin to function is in scope.
+Those workarounds are not a precedent for adding new upstream bug patches.
+See [CONTRIBUTING.md](https://github.com/SmolBlackHole/mermaid-elk-renderer/blob/dev/CONTRIBUTING.md) for the project scope.
+
+- [ ] This PR changes the plugin itself or updates dependencies. It does not patch Mermaid or add a new plugin-side workaround for an upstream Mermaid bug.
 
 ## AI assistance and ownership
 
