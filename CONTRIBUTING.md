@@ -3,6 +3,39 @@
 Use `dev` as the base branch for changes and open pull requests against `dev`.
 Keep changes focused and include a regression test when fixing a bug.
 
+For rendering changes, include a minimal Mermaid diagram and before/after
+screenshots in the [pull request template](.github/PULL_REQUEST_TEMPLATE.md).
+Record the Mermaid provider, versions, and settings needed to reproduce it.
+
+Include the plugin version or commit before and after the change, the Obsidian
+and operating system versions, and the actual Mermaid version for each provider
+tested. If a version is unknown, say so. For comparisons outside Obsidian, include
+the browser version and a reproducible URL. Include a debug report when relevant.
+
+## AI assistance and ownership
+
+AI assistance is allowed for code, tests, documentation, and PR descriptions.
+Disclose whether you used it in the pull request template. If you did, include
+the model and version, the generation date, what was generated, and what you
+changed. For example:
+
+```txt
+AI assistance: Yes
+Model: GPT-5.6-Sol XHigh
+Date: 2024-06-01
+Generated content: PR description and test cases
+Modifications: Minor edits for clarity and formatting
+```
+
+Review everything you submit, including generated content. You must be able to
+explain how the changes work, justify why they are needed, and discuss their
+tradeoffs. You are responsible for the contribution's correctness and the
+claims made in the PR.
+
+Complete the AI disclosure and ownership checkboxes for every PR. Contributions
+with undisclosed AI assistance, unreviewed generated content, or changes the
+contributor cannot explain or justify will not be accepted.
+
 ## Local checks
 
 Use Node.js 22 or newer and install the locked dependencies with `npm ci`.
