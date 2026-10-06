@@ -9,6 +9,14 @@ If you enable **Use bundled Mermaid 11**, the plugin loads Mermaid 11.17.0 from 
 > [!tip] When to turn this on
 > If a diagram from the official Mermaid docs fails in Obsidian, try the bundled runtime first.
 
+## Long labels getting cut off
+
+Mermaid measures edge labels with a hidden measurement pass and clamps each label to a 200 px box. The layout engine then trusts that measurement. When the measurement lands on a sub-pixel fraction (fonts, display scaling and zoom can all cause this), Mermaid's built-in safety net — switch the label to word-wrapping when it fills the 200 px box — fails a strict equality check. The label then stays on one line, overflows its box, and the tail of the text is cut off mid-character. Long CJK labels hit this first because every character is a full glyph width.
+
+Obsidian ships a manual fix for this in their own bundled Mermaid. The plugin applies the same one-line fix to the Mermaid runtime it bundles, so the bundled path wraps long labels instead of truncating them. This is a build-time patch (`scripts/lib/mermaid-wrap-switch-patch.mjs`); if a future Mermaid upgrade changes the bundled code shape, the build fails loudly instead of silently dropping the fix.
+
+Nothing to configure — routed diagrams wrap long labels automatically.
+
 ## Styling defaults
 
 **Default Mermaid look** and **Default Mermaid theme** set global defaults for routed diagrams. They only apply when the diagram does not already define its own values. Your own frontmatter always wins.

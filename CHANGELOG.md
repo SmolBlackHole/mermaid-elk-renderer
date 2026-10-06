@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Applied a build-time fix to the bundled Mermaid runtime that mirrors the manual patch Obsidian ships in their own Mermaid build: the edge-label wrap switch now compares the measured label width with a rounded value instead of strict equality, so long edge labels (CJK text in particular) wrap to a second line on setups where the measurement lands on a sub-pixel fraction instead of being clipped mid-glyph. The build asserts the patch site exists and fails loudly if a Mermaid upgrade changes the bundled code shape.
+
 ## 1.2.3
 
 - Updated bundled Mermaid to 11.17.0 and refreshed security fixes in locked dependencies.
