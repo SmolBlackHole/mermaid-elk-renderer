@@ -2,6 +2,8 @@
 
 Re-enables the ELK (Eclipse Layout Kernel) layout engine for Mermaid diagrams in Obsidian.
 
+[You can get it here directly in Obsidian](https://community.obsidian.md/plugins/mermaid-elk-renderer)
+
 ![ELK layout in action](assets/example_1.png)
 
 ## What this plugin does
